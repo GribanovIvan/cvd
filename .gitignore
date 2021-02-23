@@ -1,0 +1,16 @@
+# Dot files
+.*
+!.gitignore
+
+# CMake compile stuff
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+
+# "CMake" headers
+src/config.h
+
+# Out binary
+cvd
+cvd.exe
