@@ -1,61 +1,75 @@
 #!/bin/bash
 #cvd alpha 0.5 by Gribanov "Здесь ты ищешь тот шар золотой..."
 start=$(date +%s) # требуеться для посчёта времени затраченного на выполнение
-yad=1 # GUI
-if [ $yad = 1 ] && [[ "$@" = '' ]] ; then
-										curl https://dark-libria.it/ -o .cvd.dark.tmp 2> .cvd.curl.tmp
-										gcut=$(echo $(cat .cvd.dark.tmp) | sed 's/.*genre//g')
-										ycut=$(echo $(cat .cvd.dark.tmp) | sed 's/.*year//g')
-										#genres=$(echo $gcut | sed 's/<\/select>.*//g' | sed s/'<\/option> <option>'/':chk" --field=$"'/g | sed s'/<\/option>'/':chk"'/g | sed s/'" size="6" data-live-search="true"> <option>'/'--field=$"'/g);while [[ "$genres" = *DOCTYPE* ]]; do genres=$(echo $(curl https://dark-libria.it/ -o .cvd.dark.tmp 2> .cvd.curl.tmp;cat .cvd.dark.tmp;gcut=$(echo $(cat .cvd.dark.tmp) | sed 's/.*genre//g')) | sed 's/<\/select>.*//g' | sed s/'<\/option> <option>'/':chk" --field=$"'/g | sed s'/<\/option>'/':chk"'/g | sed s/'" size="6" data-live-search="true"> <option>'/'--field=$"'/g); done
-										genres=$(echo $gcut | sed 's/<\/select>.*//g' | sed s/'<\/option> <option>'/':chk" --field=$"'/g | sed s'/<\/option>'/':chk"'/g | sed s/'" size="6" data-live-search="true"> <option>'/'--field=$"'/g);if [[ "$genres" = *DOCTYPE* ]]; then "$0";exit;fi
-										years=$(echo $ycut | sed 's/<\/select>.*//g' | sed s/'<\/option> <option>'/':chk" false --field=$"'/g | sed s'/<\/option>'/':chk" false '/g | sed s/'" size="6" data-live-search="true"> <option>'/'--field=$"'/g)
-										echo yad --plug=$start --tabnum=2 --form --columns=3 $genres --text=\"Если ни один из жанров не выбран - поиск будет произведён по каждому\". \> .cvd.tf.tmp > yad-alert;bash yad-alert &
-										echo yad --plug=$start --tabnum=3 --form --columns=3 $years --field="Сезон":CB 'Любой!Зима!Весна!Лето!Осень' --text=\"Если ни один год не выбран - поиск будет произведён по каждому\". \> .cvd.years.tmp > yad-alert2;bash yad-alert2 &
-fi
+if [ "$DISPLAY" = '' ] ;then yad=0;if [ -d /data/data/com.termux/ ];then echo При возникновении проблем с Mx Player или LazyMedia
+echo используйте другй плеер, например Kmplayer или VLC;termux=1;if [ "$yad" = '1' ]; then echo Графика в термуксе? ого!; yad=termux;fi;fi;fi
 rm -rf .cvd*tmp
 touch .cvd.link.tmp
 argsV='-y -c copy -bsf:a aac_adtstoasc' # аргументы для скачивания видео (только ffmpeg)
-argsA='-y -bsf:a aac_adtstoasc' # аргументы для скачивания аудио, впервые появились в альфа pre-0.5, пока им применение не найденно
+argsA='-y -bsf:a aac_adtstoasc' # аргументы для скачивания аудио, впервые появились в альфа pre-0.5, пока им применение не найдено
 link=$@ # костыльный ком, нужно будет его убрать.. наверное...
 cont=mkv # контейнер для скачанных файлов
 downtime=10 # задежка между попытками скачать новую серию
 debug=0 # debug level (вот это поворот)
 gospod='Чего желаете, господин?' # входное сообщение
-cvdw=203 # Ширина маленьких окон
+cvdw=213 # Ширина маленьких окон
 progname='CVD 0.5' # кодовое название
+#$(cat ~/.config/cvd)
+if [ "$yad" = 0 ] && [ "$yad" != termux ]; then :; else
+yad=1 # GUI
+fi
+if [ $yad != 0 ] && [[ "$@" = '' ]] ; then
+										curl https://darklibria.it/ -Lo .cvd.dark.tmp 2> .cvd.curl.tmp
+										gcut=$(echo $(cat .cvd.dark.tmp) | sed 's/.*genre//g')
+										ycut=$(echo $(cat .cvd.dark.tmp) | sed 's/.*year//g')
+										#genres=$(echo $gcut | sed 's/<\/select>.*//g' | sed s/'<\/option> <option>'/':chk" --field=$"'/g | sed s'/<\/option>'/':chk"'/g | sed s/'" size="6" data-live-search="true"> <option>'/'--field=$"'/g);while [[ "$genres" = *DOCTYPE* ]]; do genres=$(echo $(curl https://darklibria.it/ -o .cvd.dark.tmp 2> .cvd.curl.tmp;cat .cvd.dark.tmp;gcut=$(echo $(cat .cvd.dark.tmp) | sed 's/.*genre//g')) | sed 's/<\/select>.*//g' | sed s/'<\/option> <option>'/':chk" --field=$"'/g | sed s'/<\/option>'/':chk"'/g | sed s/'" size="6" data-live-search="true"> <option>'/'--field=$"'/g); done
+										genres=$(echo $gcut | sed 's/<\/select>.*//g' | sed s/'<\/option> <option>'/':chk" --field=$"'/g | sed s'/<\/option>'/':chk"'/g | sed s/'" size="6" data-live-search="true"> <option>'/'--field=$"'/g | sed s/' data-live-search=\"true\"> <option>'/--field=/g );if [[ "$genres" = *DOCTYPE* ]]; then "$0";exit;fi
+										years=$(echo $ycut | sed 's/<\/select>.*//g' | sed s/'<\/option> <option>'/':chk" false --field=$"'/g | sed s'/<\/option>'/':chk" false '/g | sed s/'" size="6" data-live-search="true"> <option>'/'--field=$"'/g | sed s/' data-live-search=\"true\"> <option>'/--field=/g)
+										echo yad --plug=$start --tabnum=2 --form --columns=3 $genres --text=\"Если ни один из жанров не выбран - поиск будет произведён по каждому\". \> .cvd.tf.tmp | bash &
+										echo yad --plug=$start --tabnum=3 --form --columns=3 $years --field="Сезон":CB 'Любой!Зима!Весна!Лето!Осень' --text=\"Если ни один год не выбран - поиск будет произведён по каждому\". \> .cvd.years.tmp > yad-alert2;bash yad-alert2 &
+fi
 #cat /usr/local/bin/cvd | sed 's/Выберите/Оберіть/g;s/Описание/Опис/g;s/желаете/бажаєте/g;s/Чего/Чого/g;s/господин/господине/g;s/Отправить/Відправити/g;s/желаю/бажаю/g;s/оиск/ошук/g;s/Мне/Мені/g;s/повезёт/пощастить/g;s/Искомое/Шукане/g;s/временам/рокам та сезонам/g;s/Если/Якщо/g;s/ни один/жодного/g;s/из/з/g;s/ров/рів/g;s/ран/рано/g;s/будет/буде/g' | bash
 #mpvargs='--hwdec=auto'
 #var=$(echo "$var" | sed 's/ /+/g' );echo https://mangalib.me/$(curl 'https://mangalib.me/search?type=manga&q='$var | sed s/.*'slug":"'//g | cut -d\" -f1)
 #echo https://www.lostfilm.tv$(curl https://www.lostfilm.tv/search/?q=острые+козырьки | grep -i no-decoration | cut -d\" -f2)
-#curl -Lf 'https://www.anilibria.tv/public/api/index.php' -F query=random_release 2>> .cvd.curl.tmp | cut -d\" -f8
 #curl https://anime.anidub.life/anime/full/10649-pervoklassnyy-advokat-tv-2-gyakuten-saiban-sono-shinjitsu-igi-ari-01-iz-24.html | grep -i ourspan 2>> .cvd.curl.tmp | sed s/'&id=-1" "'/\\n/g | cut -d\& -f1 | sed 's/.*data="//g' | sed '$ d'
 #curl https://anime.anidub.life/player/index.php?vid=/s1/10564/1/1.mp4 -e https://anime.anidub.life -A '' 2> .cvd.curl.tmp| grep -i video.php | grep -i videoUrl | cut -d? -f2 | cut -d\' -f1
-#curl https://amai.tv/embeds/search 2> .cvd.curl.tmp | sed ':a;N;$!ba;s/,\n/,/g' | grep 8 | wc -l
+#curl https://amai.tv/embeds/search 2> .cvd.curl.tmp | grep 8 | wc -l #curl https://amai.tv/embeds/search 2> .cvd.curl.tmp | sed ':a;N;$!ba;s/,\n/,/g' | grep 8 | wc -l
 #curl $(echo https://amai.tv$(curl https://amai.tv/anime/doktor-stoun 2>> .cvd.curl.tmp | grep -i embeds | cut -d\" -f2)) | grep -i Сезон | wc -l
 #[ivan@HP255-G7 tmp]$ ses=2
 #[ivan@HP255-G7 tmp]$ ser=5
 #[ivan@HP255-G7 tmp]$ req=стоун
 #[ivan@HP255-G7 tmp]$ mpv http:$(curl $(echo https://amai.tv$(curl https://amai.tv$(curl https://amai.tv/embeds/search 2>> .cvd.curl.tmp | sed ':a;N;$!ba;s/,\n/,/g' | grep -i $"$req" | cut -d: -f5 | cut -d\" -f2) 2>> .cvd.curl.tmp | grep -i embeds | cut -d\" -f2)) 2>> .cvd.curl.tmp| sed ':a;N;$!ba;s/\n/@/g' | sed 's/.*$ses\ Сезон//g' | sed 's/.*\[//g' | sed 's/\]}.*//g' | sed s/'@'/\\n/g | grep -i "Серия $ser" | cut -d\" -f8)
 #mpv http:$(curl $(echo https://amai.tv$(curl https://amai.tv$(curl https://amai.tv/embeds/search 2>> .cvd.curl.tmp | sed ':a;N;$!ba;s/,\n/,/g' | grep -i стоун | cut -d: -f5 | cut -d\" -f2) 2>> .cvd.curl.tmp | grep -i embeds | cut -d\" -f2)) 2>> .cvd.curl.tmp| sed ':a;N;$!ba;s/\n/@/g' | sed 's/.*2\ Сезон//g' | sed 's/.*\[//g' | sed 's/\]}.*//g' | sed s/'@'/\\n/g | grep -i 'Серия 5' | cut -d\" -f8)
+#curl http://rezkery.com/animation/drama/2483-evangelion-2.22-ty-ne-proydesh.html -A cvd --compressed 2> .cvd.curl.tmp| sed s/.*Ultra]//g | sed s/:hls.*//g | sed s/'\\\/'/'\/'/g
+#qbittorrent http://shiza-project.com$(curl https://shiza-project.com/releases/rwby-tv-6 | grep \"torrent-counter\" | sed s/.*href=\"//g | cut -d\" -f1)
+#curl http://rezkery.com/engine/ajax/search.php --compressed --data-raw 'q=евангелион'
+#mpv $(curl https://play.animegost.org/$(curl https://animevost.org/tip/tv/2708-kimetsu-no-yaiba-2nd-season.html | grep 1\ серия\" | cut -d\" -f4) | grep mp4 | tac | cut -d'
+#' -f1 | sed s/.*href//g | cut -d\" -f2)
+mpv --version > /tmp/.cvd.mpv.tmp&
 if [ -z "$2" ]; then name=video # если скачиваться видео со страшного ресурса, то его
 				else name=$2 #    имя будет вторым аргументом, если не указан - video
 fi
 if (( $debug > 2 )); then echo first done.;fi
 if [ -z "$link" ] ; then
 					until [ "$err" = 0 ]; do																																	# я прибавил 3 пиксиля. И что?
-					if [ $yad = 1 ]; then yad --form --field=$"$gospod" --field=Поиск\ на\ jutsu:chk --field=Поиск\ на\ AniLibria:chk --width=$cvdw --plug=$start --tabnum=1 '' true true > .cvd.link.tmp &
+					if [ $yad != 0 ]; then yad --form --field=$"$gospod" --field=Поиск\ на\ jutsu:chk --field=Поиск\ на\ AniLibria:chk --width=$cvdw --plug=$start --tabnum=1 '' true true > .cvd.link.tmp &
 					#yad --notebook --key=$start --tab=$"Искомое" --tab=$"По жанрам" --tab=$"По временам" --title="$progname" --buttons-layout=center --button='Отправить!answer:0' --button='Не желаю.!call-stop:1' --button='Мне повезёт!star-shape:yad --text=Поздравляем\!\!\ вы\ нажали\ на\ волшебную\ кнопку\ удачи\!\!\ теперь\ вам\ будет\ сопутствовать\ удача. --center --no-buttons' --text-align=center --center 
-					yad --notebook --key=$start --tab=$"Искомое" --tab=$"По жанрам" --tab=$"По временам" --title="$progname" --buttons-layout=center --button='Отправить!gtk-apply:0' --button='Не желаю.!call-stop:1' --button='Мне повезёт!starred:2' --text-align=center --center
+					yad --notebook --key=$start --tab=$"Искомое" --tab=$"По жанрам" --tab=$"По временам" --title="$progname" --buttons-layout=center --button='Отправить!gtk-apply:0' --button='Не желаю.!call-stop:1' --button='Мне повезёт!starred:2' --button='Последние!clock:3' --text-align=center --center
 					case $? in
    1) exit;;
-   2) link=$(echo $(curl -l https://dark-libria.it/random) 2>> .cvd.curl.tmp | sed 's/.*href="\/release\///g' | cut -d\" -f1)
+#   2) link=$(echo $(curl -l https://darklibria.it/random) 2>> .cvd.curl.tmp | sed 's/.*href="\/release\///g' | cut -d\" -f1)
+	2) link=$(curl http://api.anilibria.tv/v2.9.1/getRandomTitle?filter=id 2> .cvd.curl.tmp | cut -d\: -f2 | cut -d\} -f1) #
+#	2) link=$(curl -Lf 'https://al.sdev.xyz/public/api/index.php' -F query=random_release 2>> .cvd.curl.tmp | cut -d\" -f8
    #link=pet-na-kanojo REDACTEDня, которая есть и на либре, и на джутсу, кстати годное аниму
-   findby=code;err=0;anilibria=1
-   echo gachi fix me too and give debug sex;;
+   findby=id;err=0;anilibria=1
+   #echo gachi fix me too and give debug sex
+   ;;
    252) exit;;
+   3) link=showlast;;
    0) link=$(cat .cvd.link.tmp | cut -d\| -f1);;
 esac
-					tf=$(cat .cvd.tf.tmp 2>> .cvd.tmp)							# эта конструкция српшаривает.
+					tf=$(cat .cvd.tf.tmp 2>> .cvd.tmp)							# эта конструкция спршаривает.
 					years=$(cat .cvd.years.tmp 2>> .cvd.tmp)
 					all=$(echo "$tf" | grep -o "|" | wc -l)
 					tfr=$(echo $gcut | sed 's/<\/select>.*//g' | sed s/'<\/option> <option>'/\|/g | sed s'/<\/option>'/'|'/g | sed s/'" size="6" data-live-search="true"> <option>'/''/g)
@@ -74,14 +88,16 @@ fi
 						read link # считыватель введенных аргуме.. А REDACTED его, просто костыль
 					fi
 					link=$link | sed 's/^[ \t]*//;s/[ \t]*$//' | cut -d? -f1 #  отчикрыживатель пробелов в начале и конце. Спасибо, Hfib а потом откусыватель аргументов
+					while [[ "$link" = *\ \ * ]]; do var=$(echo "$link" | sed s/'  '/' '/g);done
 					if [ -z "$link" ]; then
 					err=1;gospod='Самый умный? введи чёт.' #для глупых.
-					if [ $yad = 1 ];then yad --width=$cvdw  --center --no-buttons --text=$"без буов не как." --text-align=center --title="$progname" &
+					if [ $yad != 0 ];then yad --width=$cvdw  --center --text=$"без буков не как." --text-align=center --title="$progname" &
 					exit;fi
 					else err=0
 					fi
 									done
 fi
+if [ "$link" = random ]; then link=$(curl http://api.anilibria.tv/v2.9.1/getRandomTitle?filter=id 2>> .cvd.curl.tmp| cut -d\: -f2 | cut -d\} -f1);fi
 if (( $debug > 2 )); then echo first2 done.;fi
 if [ "$link" = q ] && [[ $@ != q ]] ; then echo Выход...;exit # выход при вводе q
     elif [[ "$link" = http*://*.libria.fun/videos/ts/* ]] ; then							#доREDACTEDа
@@ -100,26 +116,34 @@ if [ "$link" = q ] && [[ $@ != q ]] ; then echo Выход...;exit # выход 
 	if [ "$int" = 1 ]; then rm -rf $num.$cont;exit		#в
 	else exit;fi # скачивалка, аргументы идут в .cvd.tmp	0.5
 	elif [[ "$link" = *.m3u8 ]] ; then # хандлер m3u8 потоков
-	 ffmpeg -i $link $argsV $name.$cont # скачивалка
-	elif [[ $link = *dark-libria.it/release/* ]]; then #ОБНАРУЖЫЖЕВАТИТИВАТЕЛЬ анилибрЫ
+	ffmpeg -i $link $argsV $name.$cont # скачивалка
+	elif [[ $link = *dark*libria.it/release/* ]]; then #ОБНАРУЖЫЖЕВАТИТИВАТЕЛЬ анилибрЫ REDACTEDа, переделано под новую дарк либрию..
 	findby=code;err=0;listing=anilibria
 	link=$(echo $link | cut -d: -f2)
-	if [[ $link = //* ]]; then link=$(echo $link | cut -c26-)
-	else link=$(echo $link | cut -c24-)
+	if [[ $link = //* ]]; then link=$(echo $link | cut -d \/ -f5)
+	else link=$(echo $link | cut -d \/ -f3)
 	fi
 	elif [[ "$link" = http*://video.sibnet.ru/shell.php?videoid=* ]]; then
 	listing=sibnet
-	video=$(printf https://$(curl https://video.sibnet.ru$(curl "$link" 2>> .cvd.curl.tmp | grep -i .mp4 | sed s/.*player.src//g | cut -d\" -f2) -e "$link" -I 2>> .cvd.curl.tmp | grep -i Location | cut -c13- | rev | cut -c2- | rev))
+	curl "$link" 2>> .cvd.curl.tmp > .cvd.tmp
+	video=$(printf https://$(curl https://video.sibnet.ru$(cat .cvd.tmp | grep -i .mp4 | sed s/.*player.src//g | cut -d\" -f2) -e "$link" -I 2>> .cvd.curl.tmp | grep -i Location | cut -c13- | rev | cut -c2- | rev))
+	title=$(cat .cvd.tmp | grep -i data-title | cut -d\\ -f2 | cut -c2- | sed s/\amp\;//g)
 	listing=raw
 	echo '|FALSE|FALSE|' > .cvd.link.tmp
 	elif [[ "$link" = http*://video.sibnet.ru/video* ]]; then
 	link=https://video.sibnet.ru/shell.php?videoid=$(echo $link | sed s/.*video//g | cut -d- -f1) # https://video.sibnet.ru/video3464851-_AniDub___Gyakuten_Saiban__Sono_Shinjitsu__Igi_Ari____Pervoklassnyiy_advokat__TV_2___01___Lonely_Dragon_/
 	listing=sibnet
-	video=$(printf https://$(curl https://video.sibnet.ru$(curl "$link" 2>> .cvd.curl.tmp | grep -i .mp4 | sed s/.*player.src//g | cut -d\" -f2) -e "$link" -I 2>> .cvd.curl.tmp | grep -i Location | cut -c13- | rev | cut -c2- | rev))
+	curl "$link" 2>> .cvd.curl.tmp > .cvd.tmp
+	video=$(printf https://$(curl https://video.sibnet.ru$(cat .cvd.tmp | grep -i .mp4 | sed s/.*player.src//g | cut -d\" -f2) -e "$link" -I 2>> .cvd.curl.tmp | grep -i Location | cut -c13- | rev | cut -c2- | rev))
+	title=$(cat .cvd.tmp | grep -i data-title | cut -d\\ -f2 | cut -c2- | sed s/\amp\;//g)
 	listing=raw
 	echo '|FALSE|FALSE|' > .cvd.link.tmp
 	#elif [[ "$link" = http*://anime.anidub.life/anime/full/*.html ]]; then
 	#listing=anidub
+	elif [[ "$link" = *rezka.ag/*/*/*-*.html* ]]; then
+	link=$(echo $link | sed s/rezka.ag/rezkery.com/g | sed s/https/http/g)
+	mpv $(curl "$link" -A cvd --compressed 2> .cvd.curl.tmp| sed s/.*Ultra]//g | sed s/:hls.*//g | sed s/'\\\/'/'\/'/g | rev | cut -d\; -f1 | rev)
+	exit
 	elif [[ $link = *anilibria.tv/release/* ]]; then #тоже ОБНАРУЖЫЖЕВАТИТИВАТЕЛЬ анилибрЫ
 	findby=code;err=0;listing=anilibria
 	link=$(echo $link | cut -d: -f2)
@@ -132,37 +156,76 @@ if [ "$link" = q ] && [[ $@ != q ]] ; then echo Выход...;exit # выход 
 	  findby=id;err=0;listing=anilibria # прадед, сыщик анилибры.
 	  if (( debug > 1 )); then echo $link has been used.;fi
 	  fi
+	  if (( debug > 2 )); then echo $link has been used.;fi
 	  if (( $debug > 2 )); then echo where im;fi
 	if [ -z "$listing" ] && [ "$(cat .cvd.link.tmp | cut -d\| -f3)" = TRUE ] || [ "$(cat .cvd.link.tmp | cut -d\| -f3)" = '' ]; then
 	codeplus=$(echo $link | sed s/' '/+/g | sed s/-/+/g)			# рандомная REDACTEDня!! в бой!!, а если серьёзно ищет альтернативы.
-	curl https://dark-libria.it/search?find=$codeplus$extra 2> .cvd.curl.tmp | grep -i '<a href="/release/' |  sed -e n\;d > .cvd.tmp
-	temp=$(cat .cvd.tmp| cut -d'"' -f2 | cut -d\/ -f3)
-	all=$(cat .cvd.tmp | wc -l )
+	#curl https://darklibria.it/search?find=$codeplus$extra 2> .cvd.curl.tmp | grep -i '<a href="/release/' |  sed -e n\;d > .cvd.tmp
+	#curl -Lf https://al.sdev.xyz/public/api/index.php 2> .cvd.curl.tmp -F query=search -F search="$link" | jq 'if .status then .data else error(.error) end' > .cvd.tmp #| grep -o '"code":' | wc -l
+		if [ $yad = 0 ];then printf "Отправка запроса.."
+	#else echo "# Отправка запроса"
+	fi
+	if [ "$link" = showlast ]; then
+	if [ $yad != 0 ]; then
+	curl http://api.anilibria.tv/v2/getChanges?filter=names,id\&show_hidden=1\&limit=$(( ($(xdpyinfo | grep 'dimensions:' | cut -dx -f2 | cut -d' ' -f1) - 170) /26 )) 2> .cvd.curl.tmp | jq > .cvd.tmp
+	else
+	curl http://api.anilibria.tv/v2/getChanges?filter=names,id\&show_hidden=1\&limit=$(( $(stty size | cut -d' ' -f1) - 2)) 2> .cvd.curl.tmp | jq > .cvd.tmp
+	fi
+	else
+	curl http://api.anilibria.tv/v2/searchTitles?search=$(echo $link | jq -sRr @uri | rev | cut -c4- | rev)\&filter=names,id\&limit=-1\&show_hidden=1 2> .cvd.curl.tmp | jq > .cvd.tmp
+	fi
+	sed s/'\\\"'/двойная\ хрень/g .cvd.tmp > .cvd.many.tmp
+	cat .cvd.many.tmp | grep \"ru\" | cut -d\" -f4 > names-ru;cat .cvd.many.tmp | grep \"en\" | cut -d\" -f4 > names-en;cat .cvd.many.tmp | grep \"id\"\: | cut -d: -f2 > id
+	#temp=$(cat .cvd.tmp| cut -d'"' -f2 | cut -d\/ -f3)
+	#all=$(cat .cvd.tmp | grep -c '"code":')
+	all=$(wc -l id | cut -d' ' -f1)
 	if [ $(( all > 1 )) = 1 ]; then
-	h=$(($all * 25 + 73))
-	cat .cvd.tmp | cut -d'"' -f6 > .cvd.many.tmp
-	w=$(($(grep -Em1 "^.{$(wc -L <.cvd.many.tmp)}\$" .cvd.many.tmp | wc -c) * 5 ))
+	h=$(($all * 25 + 92))
+	#cat .cvd.tmp | cut -d'"' -f6 > .cvd.many.tmp
+	temp=0
+	rm -rf .cvd.many.tmp
+    if [ $yad != 0 ]; then
+	w=$(($(($(grep -Em1 "^.{$(wc -L < names-ru)}\$" names-ru | wc -c) +$(grep -Em1 "^.{$(wc -L < names-en)}\$" names-en | wc -c)))* 47 / 9)) # прочитай это
 	if [ $(( w < cvdw )) = 1 ]; then w=$cvdw;fi
-echo "yad --title=\$\"$progname\" --text-align=center --list --center --height=$h --width=$w --column=Выборете\ релиз $(
-	echo \'$(until [ $all = "$last" ]
-do
-let ' last = last + 1 '
-cat .cvd.many.tmp | cut -d'
-' -f$last
-printf \'
-done
-) | sed s/\ \'/\'\ \'/g | rev | cut -c3- | rev)" > yad-alert3
-chosenbyheaven=$(bash yad-alert3 | cut -d\| -f1)					# ПОЖАЛУЙСТА, ОПТИМИЗИРУЙТЕ МЕНЯ
-#echo $chosenbyheaven
-codeplus=$(echo $chosenbyheaven | sed s/' '/+/g | sed s/-/+/g)
-curl https://dark-libria.it/search?find=$codeplus$extra 2> .cvd.curl.tmp | grep -i '<a href="/release/' |  sed -e n\;d > .cvd.tmp
-temp=$(cat .cvd.tmp| cut -d'"' -f2 | cut -d\/ -f3)
+echo "yad --title=\$\"$progname\" --text-align=center --list --center --height=$h --width=$w --column=Выберете\ релиз \\" > yad-alert3
+until [ $temp = $all ];do let 'temp = temp + 1'; echo $(printf \";cat names-ru | cut -d'
+' -f $temp; echo '/';cat names-en | cut -d'
+' -f $temp;printf \"\ \\) | sed s/\ \'/\'/g >> yad-alert3;done
+#echo \#all=$all >> yad-alert3
+sed s/двойная\ хрень/'\\\"'/g yad-alert3 > yad-alert2
+mv yad-alert2 yad-alert3
+#chosenbyheaven=$(bash yad-alert3 | cut -d\" -f2 | sed 's/\ \/\ .*//g')
+#curl https://darklibria.it/search?find=$codeplus$extra 2> .cvd.curl.tmp | grep -i '<a href="/release/' |  sed -e n\;d > .cvd.tmp
+#	echo $chosenbyheaven
+#exit
+link=blank	#													Не верю я, нет, не верю, в то что использовал апи вэ2, в то что в луже багов утонул сей апи а ведь правдой было это. Не верю я, нет, не верю я что использовал таки апи вэ2, багкостыль не для нас, пусть и вэ1 не угас, знаю я ман перепас.
+link=$(sed $(grep -n "$(bash yad-alert3 > .cvd.tmp; echo $? > .cvd.1.tmp; cat .cvd.tmp| cut -d\" -f2 | sed 's/\ \/\ .*//g')" names-ru | head -n 1 | cut -d: -f1)\!D id | cut -c2-)
+	 if [ $(cat .cvd.1.tmp) = 1 ] || [ $(cat .cvd.1.tmp) = 252 ] ;then exit;fi
+	 echo $temp
+#curl -Lf 'https://al.sdev.xyz/public/api/index.php' -F query=release -F id=$link 2>> .cvd.curl.tmp | jq 'if .status then .data else error(.error) end' > .cvd.tmp
+else
+#echo $all
+printf "\rНайдено несколько релизов.. Выберите один\n"
+temp=0
+until [ "$temp" = $all ]; do let ' temp = temp + 1';echo $temp\) $(cat names-ru | cut -d'
+' -f"$temp") / $(cat names-en | cut -d'
+' -f"$temp"); done
+read all #;temp=$all
+link=$(sed $all\!D id | cut -c2-)
 fi
-	if [ -z "$temp" ]; then :;else #link=$temp
-	#listing=anilibria;findby=code;err=0
-	anilibria=1 # как мы и думали, Холмс четвёртая анилибры.
-	fi;fi
-	if (( $debug > 2 )); then echo where im3;fi
+#curl -Lf 'https://al.sdev.xyz/public/api/index.php' -F query=release -F id=$link 2>> .cvd.curl.tmp | jq 'if .status then .data else error(.error) end' > .cvd.tmp
+#new
+#curl http://api.anilibria.tv/v2/getTitle?id=$link&show_hidden=1&filter=names.ru,names.en,player.host,player.playlist,description 2> .cvd.curl.tmp
+findby=id;err=0;listing=anilibria
+elif [ $all = 1 ]; then link=$(cat .cvd.tmp | grep -i id | cut -d'
+' -f1 | cut -d' ' -f6 | cut -d\, -f1)
+findby=id;err=0;listing=anilibria
+fi
+#	if [[ "$(cat .cvd.tmp)" = *names* ]]; then
+#	anilibria=1 # как мы и думали, Холмс четвёртая анилибры.
+#	fi
+fi
+	if (( $debug > 2 )); then echo anilibria=$anilbria;fi
 		if [ "$(cat .cvd.link.tmp | cut -d\| -f2)" = TRUE ] || [ "$(cat .cvd.link.tmp | cut -d\| -f2)" = '' ]; then
 		if (( $debug > 2 )); then echo where im4;fi
 		#if [ "$(curl https://jut.su/pet-na-kanojo | iconv -f cp1251 | grep -i 'По данному адресу публикаций на сайте не найдено')" = '' ]; then echo found; else echo not found;fi
@@ -173,8 +236,8 @@ fi
 		#if [ "$listing" != anilibria ]; then link=$jutlink;fi
 		fi
 	if (( $debug > 2 )); then echo jutsu is actually $jutsu;fi
-if (( $debug > 2 )); then echo where im2;fi 
-	 if [ "$anilibria" = 1 ] && [ "$jutsu"  = 1 ]; then if [ $yad = 0 ]; then echo Найденно несколько сервисов для просмотра
+if (( $debug > 2 )); then echo where im2;fi
+	 if [ "$anilibria" = 1 ] && [ "$jutsu" = 1 ]; then if [ $yad = 0 ]; then echo Найдено несколько сервисов для просмотра
 	 echo "0) AniLibria"
 	 echo "1) Jut.su"
 	 echo q - выход
@@ -192,8 +255,9 @@ case $exval in
    252) exit;;
    q) exit;;
 esac
-	 elif [ "$anilibria" = 1 ]; then listing=anilibria;findby=code;err=0;link=$temp; elif [ "$jutsu"  = 1 ];then link=$jutlink;fi
+	 elif [ "$anilibria" = 1 ] && [ "$findby" = '' ] ; then listing=anilibria;findby=code;err=0;link=$temp; elif [ "$jutsu"  = 1 ] && [ "$findby" = '' ];then link=$jutlink;fi
 	if [[ $link = *jut.su/* ]]; then listing=jutsu;fi
+	if (( $debug > 0 )); then echo link="$link";fi
 	if [ "$listing" = anilibria ]; then
 	  if [ "$err" = 0 ]; then
 	  until [ -f .cvd.tmp ]
@@ -223,9 +287,11 @@ esac
 	#else echo "# Отправка запроса"
 	fi
 	#resp=$(curl -Lf 'https://www.anilibria.tv/public/api/index.php' -F query=release -F $findby=$link 2> .cvd.tmp) короче, это зеркало проседает на 100мс, лучшее что я нашёл. в расие работает.
-	resp=$(curl -Lf 'https://al.sdev.xyz/public/api/index.php' -F query=release -F $findby=$link 2> .cvd.tmp)
+	#resp=$(curl -Lf https://al.sdev.xyz/public/api/index.php -F query=release -F $findby=$link 2> .cvd.tmp)
+	#echo $link
+	resp=$(curl http://api.anilibria.tv/v2/getTitle?$findby=$link\&show_hidden=1\&filter=names.ru,names.en,player.host,player.series,player.playlist,description,torrents.list 2> .cvd.curl.tmp)
 	fi
-	if [[ $resp = *status*false*data*null*error*code*404*message*Release*by*$findby=* ]] ; then
+	if [[ $resp = *error*code*404* ]] ; then
  	 rm -rf .cvd.tmp
      printf "\rОшибка 404! Неверный $findby! Аргументы сброшены! Перезапуск скрипта..
 "
@@ -241,19 +307,20 @@ esac
 	echo 'Ошибка curl (6), проверьте доступ в интернет.'
 	exit
 	fi
-	echo $resp | jq 'if .status then .data else error(.error) end' > .cvd.tmp
-	nums=$(grep series .cvd.tmp);nums=$(echo $nums | cut -f1 -d,)
-	first=$(echo $nums | cut -f1 -d-)
-	allnum=$(grep type .cvd.tmp | cut -f2 -d'(' | cut -f1 -d' ')
-			if [[ $allnum = *эп.* ]]; then
-							  allnum=$(echo $allnum | cut -f1 -d.);temp=${#allnum};let 'temp = temp -2';allnum=$(echo $allnum | cut -c1-$temp) # а спонсор следущей REDACTEDни- криволибрия, к примеру в релизе 7459 (13эп.) а в 8348 (52 эп.) пробел кто REDACTEDит?
-		fi
+	echo "$resp" | jq > .cvd.tmp
+	nums=$(jq .player.series.string .cvd.tmp)
+	first=$(echo $nums | cut -f1 -d- | cut -d\" -f2)
+	allnum=$(jq .type.series .cvd.tmp)
+		#	if [[ $allnum = *эп.* ]]; then
+		#					  allnum=$(echo $allnum | cut -f1 -d.);temp=${#allnum};let 'temp = temp -2';allnum=$(echo $allnum | cut -c1-$temp) # а спонсор следущей REDACTEDни- криволибрия, к примеру в релизе 7459 (13эп.) а в 8348 (52 эп.) пробел кто REDACTEDит?
+		#fi
 	#fhd=$(grep 'hd/playlist.m3u8' .cvd.tmp)
-	lfhd=$(grep -i fullhd .cvd.tmp | tac | cut -d'
-' -f1 | cut -c56-62 | sed s/-/''/g | sed s/h/''/g | sed s/d/''/g)
+	lfhd=$(cat .cvd.tmp | sed s/'"fhd"\: null,'/null/ | grep -i fhd | cut -d'
+' -f1 | cut -c35-38
+)
 											if [ ${#lfhd} = 0 ]; then lfhd=0
 											fi
-	ll=$(grep playlist.m3u8 .cvd.tmp);ll=$(echo $ll | cut -f2 -dp | cut -f1 -dv | cut -c5-${#ll} 2>> .cvd.tmp)
+	ll=$(grep host .cvd.tmp | cut -d\" -f4)/
 	if [[ $(cat .cvd.tmp) = *cut*--help* ]];
 	then
 	#if [ -есть) .cvd.tmp ]; then echo 'отвевет не получен! ошибка #1'
@@ -263,23 +330,16 @@ esac
 	echo Прошу, напишите мне, ХАЛАДОС#8335
 	"$0";exit
 	fi
-	if [ ${#first} = 12 ] ; then first=$(echo $first | cut -c 12)
-	 else first=$(echo $first | cut -c 12-${#first} | cut -f1 -d'"')
-	fi                                              # а эта REDACTEDня спасёт, если серий одна
-	if [[ "$nums" != *-* ]] ; then
-	last=$first
-    else
-	last=$(echo $nums | cut -d- -f2)
-	temp=${#last};let 'temp = temp - 1'
-	last=$(echo $last | cut -c 1-$temp)
-	num=$(echo 000$first | cut -c${#first}-7)
-	fi
+	last=$(echo $nums | cut -d- -f2 | cut -d\" -f1)
+	#if [ "$num" = '' ];then num=$(echo 000$first | cut -c${#first}-7);fi
 			if [[ $(grep status\" .cvd.tmp) = *авершен* ]]; then allnum=$last; status=ready;fi
 	if [[ "$allnum" == [\>]* ]]; then #5614
 		typehaserr=">"
 		allnum=???
 	fi																																								#king039s-raid-ishi-wo-tsugumono-tachi
-	names=$(echo $(echo $resp | cut -d[ -f2 | cut -d] -f1) | sed s/'","'/' \/ '/g | cut -c 2- | rev | cut -c 2- | rev | sed 's/^[ \t]*//;s/[ \t]*$//' | sed s/'&#'/''/g)
+	#names=$(echo $(echo $resp | cut -d[ -f2 | cut -d] -f1) | sed s/'","'/' \/ '/g | cut -c 2- | rev | cut -c 2- | rev | sed 's/^[ \t]*//;s/[ \t]*$//' | sed s/'&#'/''/g)
+	temp=$(echo $resp | sed 's/}.*//g')
+	names=$(echo $(echo $temp | cut -d\" -f6; echo \/;echo $temp | cut -d\" -f10))
 	if [ $findby = code ]; then findby=id; id=$(echo $resp | cut -d, -f2 | cut -c14-);fi #хочешь жить - перекрестись. И попробуй вспомнить что-то из молитвы..
 
 	shitnum=$(cat .cvd.tmp | grep -i series | cut -d'
@@ -303,9 +363,9 @@ esac
 		fi
 	done
 	fi
-	#description=$(grep description .cvd.tmp | cut -d'"' -f4)
-	description=$(grep description .cvd.tmp | cut -c19- | rev | cut -c3- | rev | sed s/'<br>'/'\n'/g | sed s/'&gt;'/'>'/g | sed s/'<a href=\\"'/''/g | sed s/'<\/a>'/''/g | sed s/'\\" target=\\"_blank\\">'/' '/g | sed s/al.sdev.xyz/anilibria.tv/g)
-	if [ $yad = 1 ]; then
+	#description=$(grep description .cvd.tmp | cut -d'"' -f4)            #9019 тут было 3
+	description=$(grep description .cvd.tmp | cut -c19- | rev | cut -c2- | rev | sed s/'<br>'/'\n'/g | sed s/'\\\"'/\"/g) #| sed s/'&gt;'/'>'/g | sed s/'<a href=\\"'/''/g | sed s/'<\/a>'/''/g | sed s/'\\" target=\\"_blank\\">'/' '/g | sed s/al.sdev.xyz/anilibria.tv/g)
+	if [ $yad != 0 ]; then
 	temp=$(xdpyinfo | grep 'dimensions:' | cut -d' ' -f7);yad --no-buttons --title=Описание --text "$description" --show-cursor --show-uri --width=$(( $(echo $temp | cut -d'x' -f1 ) / 3 )) --posx=$(( $( echo $temp | cut -d'x' -f1) / 24 )) --posy=$(( $( echo $temp | cut -d'x' -f2) * 3 / 5 )) --on-top --skip-taskbar &
 	descpid=$!
 	fi
@@ -313,7 +373,7 @@ esac
 	printf "\rСтатус аниме: "
 	if [ "$status" = ready ]; then echo Полностью вышло
 	else
-	echo в работе
+	echo 'в работе (ещё выпускается)'
 	fi
 	printf Названи
 		if [[ "$names" = */* ]]; then
@@ -323,21 +383,29 @@ esac
 		fi
 	if (( debug > 1 )); then echo $resp;  fi
 	else
-		if [ "$lfhd" != 0 ]; then h=157;shit='1080p' # 168
+		if [ "$lfhd" != 0 ]; then h=200;shit='1080p' # 168 157
 		hdname='720p'
 #		sdname='360p'
-		else h=132 #144
+		else h=174 #144 132
 		hdname='HD'
 #		sdname='SD'
 		fi
 		temp=err
-		temp=$(yad --list --title="$progname" --column="Выбор графония" 360p $hdname $shit --text "выберите графоний" --hide-header --height=$h --text-align=center --center --width=$cvdw --buttons-layout=center)
+		temp=$(yad --list --title="$progname" --column="Выбор графония" 360p $hdname $shit Торрент --hide-header --height=$h --text-align=center --center --width=$cvdw --buttons-layout=center)
 		if [ -z $temp ];then kill $descpid 2> /dev/null;exit;fi
-		if yad --question --title="$progname" --text="Открыть поток в mpv?" --button='Да!answer:0' --button='Нет!download' --text-align=center --center --width=$cvdw --buttons-layout=center;then mpv=1;fi
 		if [ "$temp" = '720p|' ] || [ "$temp" = 'HD|' ] ; then temp=2;fi
 #		if [ "$temp" = '360p|' ] || [ "$temp" = 'SD|' ] ; then temp=1;fi
 		if [ "$temp" = '360p|' ]; then temp=1;fi
 		if [ "$temp" = '1080p|' ] ; then temp=3;fi
+		if [[ "$temp" = *ор* ]] ; then temp=torrent;mpv=0;err=no;torrent=1;fi
+				if [ $temp != torrent ]; then
+		yad --question --title="$progname" --text="Открыть поток в mpv?" --button='Да!answer:0' --button='Нет!download' --text-align=center --center --width=$cvdw --buttons-layout=center
+			 case $? in
+   0) mpv=1;;
+   252) exit;kill $descpid 2> /dev/null;;
+   1) mpv=0;;
+   esac
+   fi
 	fi
 	elif [ "$listing" = jutsu ]; then # Так что нам не скучно, не глупи старик
 	if [ $yad = 0 ]; then
@@ -354,18 +422,32 @@ esac
 	if [[ "$link" != *episode-*.html ]]; then
 	echo $link
 	jutlast=$(cat .cvd.tmp | grep -i '</i>' | grep -i Серия | rev | cut -d' ' -f2 | cut -d'>' -f1 | rev)
-	first=$(cat .cvd.tmp | grep -i '</i>' | grep -i Серия | cut -d'>' -f4 | cut -d' ' -f1)
+	first=$(cat .cvd.tmp | grep -i '</i>' | grep -i Серия | sed 's/серия.*//g' | rev | cut -d\> -f1 | sed 's/^[ \t]*//;s/[ \t]*$//')
 	names=$(grep '<meta property="yandex_recommendations_title" content="' .cvd.tmp | sed s/'<meta property="yandex_recommendations_title" content="'/''/g | rev | cut -c5- | rev)
 	#names='ЮЮЮЮЮЮ'
 	code=$(grep '<link rel="canonical" href=' .cvd.tmp | cut -d'"' -f4 | cut -c16- | cut -d/ -f1)
 	codeplus=$(echo $code | sed s/-/+/g)
 	temp=$(grep '<meta itemprop="alternateName" content="' .cvd.tmp | sed s/'<meta itemprop="alternateName" content="'/''/g | rev | cut -c4- | rev)
-	w=$(( ${#names} * 11 + 170 ))
+	w=$(( ${#names} * 10 + 170 ))
+#	seasons=$(cat .cvd.tmp | grep the_invis | cut -d'
+#' -f2 | grep -o "the-anime-season" | wc -l)
+#echo $seasons
+echo -e $(cat .cvd.tmp | grep the_invis | cut -d'
+' -f2 | sed ':a;N;$!ba;s/o/\\\n/g' | sed s/'<\/a>'/'\\n'/g | sed s/'<\/h2>'/'\\n'/g | sed s/'<br><h2 class="b-b-title the-anime-season center films_title'/the-anime-season\ films_title/g) | sed '/^<br>/d' > .cvd.j.tmp
+h=$(( 101 + $(grep the-anime-season .cvd.j.tmp | sed 's/.*>//g' | wc -l) * 25 )) #ммрр, всего сезонов * 25 + 101
+#echo $h
+	#cat .cvd.tmp | grep the_invis | cut -d'
+#' -f2 | sed 's/^[ \t]*//;s/[ \t]*$//' | sed 's/the-anime-season.*//g' | cut -d\> -f4 | cut -d\< -f1
 	#w=248 REDACTEDас ушастый по сторону экрана, эта формула полное REDACTED, если ты в силах починить это - слава украине, принимю в разработчики
 	#echo $w
 	#echo ${#names}
 	#а вот эта REDACTEDня порой ломается.. чинить надо..
-	if [ $yad = 1 ]; then num=$(yad --scale --min-value=1 --title="$names" --max-value=$jutlast --text='Выбор серии' --min-value=$first --value=$first --text-align=center --center --width=$w --buttons-layout=center)
+	#echo $first
+	if [ $h != 101 ]; then
+	ch=$(echo yad --list --title=\""$progname"\" --column=\"Выберите сезон для просмотра\" $(grep the-anime-season .cvd.j.tmp | sed s/\>/'>"'/g | sed 's/.*>//g' | sed -e 's/$/\"/') --text \"Выбор сезона\" --hide-header --height=$h --center --text-align=center --width=249 --buttons-layout=center | bash | cut -d\| -f1)
+	fi
+	if [ $yad != 0 ]; then num=$(yad --scale --min-value=1 --title="$names" --max-value=$jutlast --text='Выбор серии' --min-value=$first --value=$first --text-align=center --center --width=$w --buttons-layout=center)
+	if [ $? = 252 ] || [ $? = 1 ]; then exit;fi
 	else printf "\rВведите номер серии от $first до $jutlast:"
 	read num
 	fi
@@ -378,7 +460,7 @@ esac
 	#echo "# Получение альтернативных названий"
 	#echo "70"
 	if [ $yad = 0 ]; then printf "\rПолучение альтернативных названий..";fi
-	temp=$(curl https://dark-libria.it/search?find=$codeplus 2> .cvd.curl.tmp | grep -i "</div>'><span>" | cut -d'>' -f4 | cut -d'<' -f1 &)
+	temp=$(curl https://darklibria.it/search?find=$codeplus 2> .cvd.curl.tmp | grep -i "</div>'><span>" | cut -d'>' -f4 | cut -d'<' -f1 &)
 	season=$(grep '<span itemprop="name">' .cvd.tmp | grep -i сезон | cut -d'>' -f2 | cut -d' ' -f1)
 	num=$(grep '<link rel="canonical" href=' .cvd.tmp | rev | cut -c10- | cut -d- -f1)
 	#echo "100"
@@ -398,7 +480,7 @@ esac
 	if [ $yad = 0 ]; then printf "\r$names";fi
 	fi
 	if [ $yad = 0 ] && [ "$description" != '' ] ; then
-	echo -e Описание: $description
+	echo -e Описание: $(echo $description | sed s/'<b>'/\\\\033[1m/g | sed s/'<\/b>'/\\\\033[0m/g | sed s/'&quot;'/\"/g)
 	fi
 	until [[ $err = 'no' ]] || [ "$listing" = raw ]
 	do
@@ -406,6 +488,7 @@ esac
 		if [ "$lfhd" != 0 ]; then echo качество пжлст 1- 360 2- 720p 3- 1080p, допишите mpv чтоб воспроизвести поток в mpv
 		else echo качество пжлст 1- SD 2- HD, допишите mpv чтоб овспроизвести поток в mpv
 		fi
+		echo torrent для скачивания торрента
 	elif [ "$listing" = jutsu ]; then
 	if [ $yad = 0 ];then echo "
 Введите желаемое качетсво, допишите mpv чтоб открыть видео в mpv"
@@ -413,9 +496,10 @@ esac
 	if [ "$hd" != 0 ];then printf ' 3- 720p';fi
 	if [ "$lfhd" != 0 ]; then echo ' 4- 1080p';else echo '';fi
 	else
-	h=134
-	if [ "$hd" != 0 ];then hdkoldun='720p';let 'h = h +24';fi
-	if [ "$lfhd" != 0 ]; then shit='1080p';let 'h = h +24';fi
+	#h=134
+	h=151
+	if [ "$hd" != 0 ];then hdkoldun='720p';let 'h = h +25';fi
+	if [ "$lfhd" != 0 ]; then shit='1080p';let 'h = h +25';fi
 	#echo $h
 	temp=$(yad --list --title="$progname" --column="Выбор графония" "360p" "480p" $hdkoldun $shit --text "выберите графоний" --hide-header --height=$h --center --text-align=center --width=$cvdw --buttons-layout=center)
 	if [ -z $temp ];then exit;fi
@@ -426,7 +510,8 @@ esac
 	if [ "$temp" = '360p|' ]; then temp=1;fi
 	fi
 	elif [ "$listing" = '' ]; then
-	if [ $yad = 1 ]; then yad --text='Ничего не найдено..' --buttons-layout=center --center --button='Блин блинский!face-cool';else echo Ничего не найдено..
+	if [ $yad != 0 ]; then yad --text='Ничего не найдено..' --buttons-layout=center --center --button='Блин блинский!face-cool';else printf "\rНичего не найдено..
+"
 	fi
 	exit
 	fi
@@ -437,17 +522,20 @@ esac
 	if [[ "$temp" = *mpv ]]; then mpv=1
 	elif [ -z $mpv ]; then mpv=0
 	fi # проверка актуальна для gui
+	if [[ "$temp" = t* ]]; then mpv=0;err=no;torrent=1;fi
 	if [ "$listing" = anilibria ]; then
 	if [ "$lfhd" != 0 ] && [[ "$temp" = 3* ]]; then res=-hd;err=no;video=$lfhd
 	elif [[ "$temp" = 2* ]]; then err=no
 	elif [[ "$temp" = 1* ]]; then res=-sd;err=no
-	else echo Кринжанул, брат;err=yes;fi
+	elif [ $torrent != 1 ]; then echo Кринжанул, брат;err=yes;fi
+	if (( $debug > 1 )); then echo c1;fi
 	elif [ "$listing" = jutsu ]; then
 	if [[ "$temp" = 2* ]]; then err=no;video=$notso
 	elif [[ "$temp" = 1* ]]; then err=no;video=$sd
 	elif [ "$hd" != 0 ] && [[ "$temp" = 3* ]]; then err=no;video=$hd
 	elif [ "$lfhd" != 0 ] && [[ "$temp" = 4* ]]; then err=no;video=$lfhd
 	else echo Кринжанул, брат;err=yes
+	if (( $debug > 1 )); then echo c2;fi
 	fi;fi
 	if [ "$listing" = jutsu ]; then ffprobe -v error -select_streams v:0 -show_entries stream=width,height -of csv=s=x:p=0 $video -user_agent '' > .cvd.reso.tmp &
 	fi
@@ -461,49 +549,61 @@ esac
 	if [[ ~ = /c/Users/* ]]; then attrib +S +H .cvd.res.tmp > /dev/null
 	fi
 	done
+	#echo $num
 	if [[ $first != $last ]] && [ $listing = anilibria ] ; then
-	if [ $yad = 0 ]; then printf '0- весь сезон не 0- выбранная серия';fi
+	if [ $yad = 0 ] && [ "$torrent" != 1 ]; then printf '0- весь сезон не 0- выбранная серия';fi
 	if [ "$last" != "$allnum" ] && (echo "$allnum" | grep -E -q "^?[0-9]+$"); then
 	if (( debug > 1 )); then echo "$last";fi
 	if (( debug > 1 )); then echo "$allnum";fi
 	let 'down = last + 1'
 	if [ $yad = 0 ]; then echo " $down- ждать серию $down и сразу скачать";fi
 	elif [ $yad = 0 ]; then echo '';fi
-	if [ $yad = 0 ]; then
+	if [ $yad = 0 ] && [ "$torrent" != 1 ]; then
 	read temp
 	temp=$(echo $temp) | sed 's/^[ \t]*//;s/[ \t]*$//'
-	else
+	elif [ "$torrent" != 1 ]; then
 	w=$(( ${#names} * 11 + 170 ))
+#	if (( debug > 3 )); then echo line 493 20210508\(9\) $temp;fi
 	temp=$(yad --scale --title="$names" --max-value=$last --text='Выбор серии' --min-value=$first --value=$first --text-align=center --center --width=$w --buttons-layout=center)
 	fi;fi
-	
 	if (echo "$allnum" | grep -E -q "^?[0-9]+$"); then :
 												  else allnum=$last
 						fi
 	if [ $listing = anilibria ];then num=$first; fi
 	if [ "$last" = "$first" ]; then temp=$first;fi
-	if [ "$temp" = 0 ] && [ $mpv = 0 ] && [ "$wtf" != 1 ]; then # важно, что не влажно как оно работает
-	 temp=$first
-	 echo $temp
-	 until [ "$int" = int ]
-	  do
-	  num=$(echo 000$temp | cut -c${#temp}-7)
-	  trap "int=int; echo Прерванно." INT
-	  echo Скачивание серии "$temp"/$allnum
-	  ffmpeg -i https://"$ll"videos/ts/$id/$num$res/playlist.m3u8 $argsV $num.$cont 2>/dev/null
-	  if [ $temp = $allnum ]; then break
-	  fi
-	  let 'temp = temp + 1'
-	  done
-	 if [ "$int" = int ]; then rm -rf $num.$cont; fi
+	if [ "$temp" = 0 ] && [ $mpv = 0 ];then #&& [ "$wtf" != 1 ]; then # важно, что не влажно как оно работает
+	# temp=$first
+	# if (( $debug > 0 )); then echo $temp;fi
+	# until [ "$int" = int ]
+	#  do
+	#  num=$(echo 000$temp | cut -c${#temp}-7)
+	#  trap "int=int; echo Прерванно." INT
+	#  echo Скачивание серии "$temp"/$allnum
+	#  ffmpeg -i https://"$ll"videos/ts/$id/$num$res/playlist.m3u8 $argsV $num.$cont 2>/dev/null
+	#  if [ $temp = $allnum ]; then break
+	#  fi
+	#  let 'temp = temp + 1'
+	#  done
+	# if [ "$int" = int ]; then rm -rf $num.$cont; fi
+	 if (( debug > 1 )); then echo Попытка скачать тыррент..;fi
+	 echo произошла ошибка.
+	 exit
 	 fi
-	 if [ $yad = 1 ] && [ $listing = raw ] ; then 
+	 if [ $yad != 0 ] && [ $listing = raw ] ; then
 	 yad --question --title="$progname" --text="Открыть видео в mpv?" --width=$cvdw --text-align=center --buttons-layout=center --center --button='Да!gtk-apply:0' --button='Нет!download:1'
 	 case $? in
    0) mpv=1;;
    252) exit;;
    1) mpv=0;;
 esac
+elif [ $yad = 0 ] && [ $listing = raw ]; then echo открыть видео в mpv?
+until [ "$fail" = 0 ]; do read mpv
+mpv = $(echo mpv | tr [:upper:] [:lower:])
+if [[ "$mpv" = *1* ]] || [[ "$mpv" = *да* ]] || [[ "$mpv" = *+* ]] || [[ "$mpv" = *угу* ]] || [[ "$mpv" = *ага* ]] || [[ "$mpv" = *ок* ]] || [[ "$mpv" = *mpv* ]] || [[ "$mpv" = *play* ]] || [[ "$mpv" = *vlc* ]] || [[ "$mpv" = *mx* ]] || [[ "$mpv" = *kmp* ]] || [[ "$mpv" = *dvix* ]] || [[ "$mpv" = y ]] || [[ "$mpv" = *д* ]] || [[ "$mpv" = *yes* ]] || [[ "$mpv" = *yep* ]] || [[ "$mpv" = *go* ]] || [[ "$mpv" = *do\ it* ]]; then mpv=1;fail=0
+elif [[ "$mpv" = *0* ]] || [[ "$mpv" = *нет* ]] || [[ "$mpv" = *-* ]] || [[ "$mpv" = *ffmpeg* ]] || [[ "$mpv" = *down* ]] || [[ "$mpv" = n ]] || [[ "$mpv" = н ]]; then mpv=0;fail=0
+else fail=1;echo нераспознано
+fi
+done
 fi
 	 if [ "$temp" = "$down" ] && [ $mpv = 0 ] && [ $listing != raw ] ;
 	 then
@@ -526,43 +626,86 @@ fi
 	 done
 	 fi
 	 if [ "$listing" = raw ]; then
-	 if [ $mpv = 1 ]; then mpv "$video";fi
-	 else
+	 if [ $mpv = 1 ]; then mpv --force-media-title="$title" "$video";fi
+	 elif [ "$torrent" != 1 ]; then
 	 kill $descpid 2>> .cvd.tmp
 	 if [ "$temp" = '' ];then exit;fi;fi
 	 if [ $listing = anilibria ]; then
 	 if [ $temp = -2 ]; then ffmpeg -i https://"$ll"videos/ts/$id/$num$res/playlist.m3u8 $argsV $num.$cont;fi
 	 if (( $debug > 1 )); then echo fiecho target 3 done;fi
 	 if [ $mpv = 0 ]; then #не пытайтесь понять, как оно работает
-	  num=000$temp;num=$(echo $num | cut -c${#temp}-7)
+	 # num=000$temp;num=$(echo $num | cut -c${#temp}-7)
 	 # echo используешь нерелизную версию??????????????????????77 лови рандомное REDACTED. ладно, не лови, я его заккоментировал :3
-	 while [ -z $(cat .cvd.reso.tmp) ]
-	 do
-	 echo ожидание..
-	 sleep 1
-	 let 'out = out + 1 '
-	 if [ $out = 10 ]; then echo Не удалось получить разрешение.;break;fi 
-	 done
-	  ffmpeg -i https://"$ll"videos/ts/$id/$num$res/playlist.m3u8 $argsV "$num"["$(cat .cvd.reso.tmp)"].$cont #2>&1 | grep -i --line-buffered frame | cut -d= -f2 #| sed -u s/fps/''/g
-	   if (( $debug > 1 )); then echo fiecho target 4 done;fi;fi
+	 #while [ -z $(cat .cvd.reso.tmp) ]
+	 #do
+	 #echo ожидание..
+	 #sleep 1
+	 #let 'out = out + 1 '
+	 #if [ $out = 10 ]; then echo Не удалось получить разрешение.;break;fi
+	 #done
+	  #ffmpeg -i https://"$ll"videos/ts/$id/$num$res/playlist.m3u8 $argsV "$num"["$(cat .cvd.reso.tmp)"].$cont #2>&1 | grep -i --line-buffered frame | cut -d= -f2 #| sed -u s/fps/''/g
+	   if (( $debug > 1 )); then echo fiecho target 4 done. code name: torrent;fi;fi
+	   all=$(echo $resp | sed s/.*\"torrents\"\:\ \{//g | grep -o /upload/torrents | wc -l)
+	   echo $resp > 123
+	   if [ $mpv = 0 ] && [ $yad = 0 ]; then echo Найдено несколько торрентов.. Выберите один
+	   temp=0
+        until [ $temp = $all ];do
+        let ' temp = temp + 1 '
+        echo $temp\) Серии $(echo $resp | sed s/.*\"torrents\"\://g | sed s/},{/^/g | cut -d\^ -f$temp | sed s/.*series//g | cut -d\} -f1 | rev | cut -d\" -f2 | rev), $(echo $resp sed s/.*\"torrents\"\://g | sed s/},{/^/g | cut -d\^ -f$temp | sed s/.*quality//g | cut -d\} -f1 | sed s/.*string//g | cut -d\" -f3), $(echo $resp | sed s/.*\"torrents\"\://g | sed s/},{/^/g | cut -d\^ -f$temp | sed s/.*seeders//g | cut -c3- | cut -d\, -f1) сидов, $(bc<<<"scale=2;$(echo $resp | sed s/.*\"torrents\"\://g | sed s/},{/^/g | cut -d\^ -f$temp | sed s/.*total_size\"://g | cut -d, -f1)/1073741824")GiB, $(date --date @$(echo $(echo $resp | sed s/.*\"torrents\"\://g | sed s/},{/^/g | cut -d\^ -f$temp | sed s/.*uploaded_timestamp\"://g | cut -d, -f1)))
+        done
+	   read temp
+	   $(grep application/x-bittorrent /usr/share/applications/mimeinfo.cache | cut -d\= -f2 | cut -d. -f2) http://cvd.anilib.top$(echo $resp | sed s/.*\"torrents\"\://g | sed s/},{/^/g | cut -d\^ -f$temp | sed s/.*\"url\"\:\"//g | cut -d\" -f1)&
+	   fi
+	   if [ $mpv = 0 ] && [ $yad != 0 ] ; then
+	  temp=0
+	  chosenbyheaven=$(echo yad --list --title=\"$names\" --column=\"Выбор торрента\" $(until [ $temp = $all ];do
+        let ' temp = temp + 1 '
+        echo \"Серии $(echo $resp | sed s/.*\"torrents\"\://g | sed s/},{/^/g | cut -d\^ -f$temp | sed s/.*series//g | cut -d\} -f1 | rev | cut -d\" -f2 | rev), $(echo $resp sed s/.*\"torrents\"\://g | sed s/},{/^/g | cut -d\^ -f$temp | sed s/.*quality//g | cut -d\} -f1 | sed s/.*string//g | cut -d\" -f3), $(echo $resp | sed s/.*\"torrents\"\://g | sed s/},{/^/g | cut -d\^ -f$temp | sed s/.*seeders//g | cut -c3- | cut -d\, -f1) сидов, $(bc<<<"scale=2;$(echo $resp | sed s/.*\"torrents\"\://g | sed s/},{/^/g | cut -d\^ -f$temp | sed s/.*total_size\"://g | cut -d, -f1)/1073741824")GiB, $(date --date @$(echo $resp | sed s/.*\"torrents\"\://g | sed s/},{/^/g | cut -d\^ -f$temp | sed s/.*uploaded_timestamp\"://g | cut -d, -f1))\"
+        done) --hide-header --height=$((151 + $temp * 24)) --text-align=center --center --width=$(($(echo $(xdpyinfo | grep 'dimensions:' | cut -dx -f1 | rev | cut -c1-7) | rev) * 2 / 5)) --buttons-layout=center --text-align=center | bash)
+        until [ "$temp" -ge $all ]; do
+        let ' temp = temp + 1 '
+        #echo $temp
+        kill $descpid 2>> /dev/null&
+        if [ "$(echo $(echo $chosenbyheaven | cut -d, -f2))"  = "$(echo $resp sed s/.*\"torrents\"\://g | sed s/},{/^/g | cut -d\^ -f$temp | sed s/.*quality//g | cut -d\} -f1 | sed s/.*string//g | cut -d\" -f3)" ]; then
+        $(grep application/x-bittorrent /usr/share/applications/mimeinfo.cache | cut -d\= -f2 | cut -d. -f2) http://cvd.anilib.top$(echo $resp | sed s/.*\"torrents\"\://g | sed s/},{/^/g | cut -d\^ -f$temp | sed s/.*\"url\"\:\"//g | cut -d\" -f1)&
+        break;fi
+        done
+	   fi
 	   if [ $mpv = 1 ]; then
 	   #realnum=000$temp;num=$(echo $num | cut -c${#temp}-7)
 	   playlists=$(( $temp - 1 ))												# REDACTEDы REDACTEDть
 	   if (( debug > 1 )); then echo seems mpv=1, num=$num, temp=$temp; fi		# REDACTED REDACTEDть
 	   temp=1																	# какого REDACTED оно не пашет то REDACTEDть?
+	   echo '#EXTM3U' > videos.m3u
 	   until [ $temp = $(( $last + 1 )) ]										# REDACTEDы REDACTEDть
 	   do																		# REDACTED REDACTEDть
 	   num=000$temp;num=$(echo $num | cut -c${#temp}-7)							# так вот в чём дело то, починю баг щас REDACTEDть
-	   videos="$videos https://"$ll"videos/ts/$id/$num$res/playlist.m3u8"
+	   #videos="$videos https://"$ll"videos/ts/$id/$num$res/playlist.m3u8"
+	   echo \#EXTINF:-1,$names $temp $(echo $res | cut -c2- | tr a-z A-Z) >> videos.m3u
+	   echo https://"$ll"videos/ts/$id/$num$res/playlist.m3u8 >> videos.m3u
 	   let 'temp = temp + 1'
+	   #echo $videos
 	   done
-	   if [ -z $(cat .cvd.reso.tmp) ]; then :;else resget=', '
-	   fi
-	   if [ $first != $last ]; then ser=', серия '
+	   echo \#EXT-X-ENDLIST >> videos.m3u
+	   #echo debug exit. you are using broken program.; exit
+	   #if [ -z $(cat .cvd.reso.tmp) ]; then :;else resget=', '
+	   #fi
+	   #if [ $first != $last ]; then ser=', серия '
+	   #else
+	   #temp=''
+	   #fi #videos $mpvargs --force-media-title="$(echo $names$ser$temp$resget$(cat .cvd.reso.tmp))"
+	   #names=$(echo $names)
+	   #if [ "$playlists" -ge 1 ]; then
+	   #echo $names
+	   #echo $resget
+	   #cat .cvd.reso.tmp
+	   if [ "$termux" = 1 ]; then termux-open videos.m3u
 	   else
-	   temp=''
-	   fi #videos $mpvargs --force-media-title="$(echo $names$ser$temp$resget$(cat .cvd.reso.tmp))"
-	   mpv $videos $mpvargs --playlist-start=$playlists --force-media-title="$(echo $names$resget$(cat .cvd.reso.tmp))"
+	   mpv videos.m3u $mpvargs -cache=auto --playlist-start=$playlists #--force-media-title="$(echo $names$resget$(cat .cvd.reso.tmp))"
+	   fi
+	   #else
+	   #mpv $videos $mpvargs -cache=auto --force-media-title="$(echo $names$resget$(cat .cvd.reso.tmp))"
+	   #fi
 	fi
 	elif [ $listing = jutsu ] && [ $mpv = 1 ]; then
 	echo $jutres > .cvd.jutres.tmp
@@ -570,13 +713,13 @@ fi
 	elif [ $listing != anilbria ] && [ $mpv = 0 ] && [ "$temp" != 0 ]; then #echo щас сREDACTEDдем..
 	until [ "$err" = 0 ]
 	do
-	temp=$(yad --file --save --confirm-overwrite='Вы уверены, что хотите перезаписать выбранный файл?')
-	if [ -z $temp ]; then err=1
+	temp=$(yad --file --save --confirm-overwrite='Вы уверены, что хотите перезаписать выбранный файл?' --filename="$title")
+	if [ -z "$temp" ]; then err=1
 	else err=0;fi
 	done
 	#if [[ $temp != *.mkv ]] || [[ $temp != *.mp4 ]] || [[ $temp != *.avi ]] || [[ $temp != *.$cont ]]; then temp=$temp.$cont;fi
 	cont=$(echo $video | cut -d? -f1 | rev | cut -d. -f1 | rev)
-	if [[ $temp != *.$cont ]]; then temp=$temp.$cont;fi
+	if [[ "$temp" != *.$cont ]] && [ "$listing" != anilibria ]; then temp="$temp".$cont;fi
 	curl $video -L -A '' -o "$temp"
 	fi
 if (( $debug < 1 )); then rm -rf .cvd.*tmp; rm -rf yad-alert*
