@@ -1,8 +1,10 @@
 #!/bin/bash
 #cvd alpha 0.5 by Gribanov "Здесь ты ищешь тот шар золотой..."
 start=$(date +%s) # требуеться для посчёта времени затраченного на выполнение
+if [ "$yad" = 1 ]; then yadF=1;echo yad forced.;fi
 if [ "$DISPLAY" = '' ] ;then yad=0;if [ -d /data/data/com.termux/ ];then echo При возникновении проблем с Mx Player или LazyMedia
-echo используйте другй плеер, например Kmplayer или VLC;termux=1;if [ "$yad" = '1' ]; then echo Графика в термуксе? ого!; yad=termux;fi;fi;fi
+echo используйте другй плеер, например Kmplayer или VLC
+termux=1;fi;fi
 rm -rf .cvd*tmp
 touch .cvd.link.tmp
 argsV='-y -c copy -bsf:a aac_adtstoasc' # аргументы для скачивания видео (только ffmpeg)
@@ -16,17 +18,18 @@ cvdw=213 # Ширина маленьких окон
 progname='CVD 0.5' # кодовое название
 #$(cat ~/.config/cvd)
 if [ "$yad" = 0 ] && [ "$yad" != termux ]; then :; else
-yad=1 # GUI
+yad=0 # GUI
 fi
+if [ "$yadF" = 1 ]; then yad=1;fi
 if [ $yad != 0 ] && [[ "$@" = '' ]] ; then
 										curl https://darklibria.it/ -Lo .cvd.dark.tmp 2> .cvd.curl.tmp
 										gcut=$(echo $(cat .cvd.dark.tmp) | sed 's/.*genre//g')
 										ycut=$(echo $(cat .cvd.dark.tmp) | sed 's/.*year//g')
 										#genres=$(echo $gcut | sed 's/<\/select>.*//g' | sed s/'<\/option> <option>'/':chk" --field=$"'/g | sed s'/<\/option>'/':chk"'/g | sed s/'" size="6" data-live-search="true"> <option>'/'--field=$"'/g);while [[ "$genres" = *DOCTYPE* ]]; do genres=$(echo $(curl https://darklibria.it/ -o .cvd.dark.tmp 2> .cvd.curl.tmp;cat .cvd.dark.tmp;gcut=$(echo $(cat .cvd.dark.tmp) | sed 's/.*genre//g')) | sed 's/<\/select>.*//g' | sed s/'<\/option> <option>'/':chk" --field=$"'/g | sed s'/<\/option>'/':chk"'/g | sed s/'" size="6" data-live-search="true"> <option>'/'--field=$"'/g); done
 										genres=$(echo $gcut | sed 's/<\/select>.*//g' | sed s/'<\/option> <option>'/':chk" --field=$"'/g | sed s'/<\/option>'/':chk"'/g | sed s/'" size="6" data-live-search="true"> <option>'/'--field=$"'/g | sed s/' data-live-search=\"true\"> <option>'/--field=/g );if [[ "$genres" = *DOCTYPE* ]]; then "$0";exit;fi
-										years=$(echo $ycut | sed 's/<\/select>.*//g' | sed s/'<\/option> <option>'/':chk" false --field=$"'/g | sed s'/<\/option>'/':chk" false '/g | sed s/'" size="6" data-live-search="true"> <option>'/'--field=$"'/g | sed s/' data-live-search=\"true\"> <option>'/--field=/g)
+# 										years=$(echo $ycut | sed 's/<\/select>.*//g' | sed s/'<\/option> <option>'/':chk" false --field=$"'/g | sed s'/<\/option>'/':chk" false '/g | sed s/'" size="6" data-live-search="true"> <option>'/'--field=$"'/g | sed s/' data-live-search=\"true\"> <option>'/--field=/g)
 										echo yad --plug=$start --tabnum=2 --form --columns=3 $genres --text=\"Если ни один из жанров не выбран - поиск будет произведён по каждому\". \> .cvd.tf.tmp | bash &
-										echo yad --plug=$start --tabnum=3 --form --columns=3 $years --field="Сезон":CB 'Любой!Зима!Весна!Лето!Осень' --text=\"Если ни один год не выбран - поиск будет произведён по каждому\". \> .cvd.years.tmp > yad-alert2;bash yad-alert2 &
+# 										echo yad --plug=$start --tabnum=3 --form --columns=3 $years --field="Сезон":CB 'Любой!Зима!Весна!Лето!Осень' --text=\"Если ни один год не выбран - поиск будет произведён по каждому\". \> .cvd.years.tmp > yad-alert2;bash yad-alert2 &
 fi
 #cat /usr/local/bin/cvd | sed 's/Выберите/Оберіть/g;s/Описание/Опис/g;s/желаете/бажаєте/g;s/Чего/Чого/g;s/господин/господине/g;s/Отправить/Відправити/g;s/желаю/бажаю/g;s/оиск/ошук/g;s/Мне/Мені/g;s/повезёт/пощастить/g;s/Искомое/Шукане/g;s/временам/рокам та сезонам/g;s/Если/Якщо/g;s/ни один/жодного/g;s/из/з/g;s/ров/рів/g;s/ран/рано/g;s/будет/буде/g' | bash
 #mpvargs='--hwdec=auto'
@@ -46,7 +49,7 @@ fi
 #curl http://rezkery.com/engine/ajax/search.php --compressed --data-raw 'q=евангелион'
 #mpv $(curl https://play.animegost.org/$(curl https://animevost.org/tip/tv/2708-kimetsu-no-yaiba-2nd-season.html | grep 1\ серия\" | cut -d\" -f4) | grep mp4 | tac | cut -d'
 #' -f1 | sed s/.*href//g | cut -d\" -f2)
-mpv --version > /tmp/.cvd.mpv.tmp&
+mpv --version 2> /dev/null > /tmp/.cvd.mpv.tmp&
 if [ -z "$2" ]; then name=video # если скачиваться видео со страшного ресурса, то его
 				else name=$2 #    имя будет вторым аргументом, если не указан - video
 fi
@@ -55,7 +58,8 @@ if [ -z "$link" ] ; then
 					until [ "$err" = 0 ]; do																																	# я прибавил 3 пиксиля. И что?
 					if [ $yad != 0 ]; then yad --form --field=$"$gospod" --field=Поиск\ на\ jutsu:chk --field=Поиск\ на\ AniLibria:chk --width=$cvdw --plug=$start --tabnum=1 '' true true > .cvd.link.tmp &
 					#yad --notebook --key=$start --tab=$"Искомое" --tab=$"По жанрам" --tab=$"По временам" --title="$progname" --buttons-layout=center --button='Отправить!answer:0' --button='Не желаю.!call-stop:1' --button='Мне повезёт!star-shape:yad --text=Поздравляем\!\!\ вы\ нажали\ на\ волшебную\ кнопку\ удачи\!\!\ теперь\ вам\ будет\ сопутствовать\ удача. --center --no-buttons' --text-align=center --center 
-					yad --notebook --key=$start --tab=$"Искомое" --tab=$"По жанрам" --tab=$"По временам" --title="$progname" --buttons-layout=center --button='Отправить!gtk-apply:0' --button='Не желаю.!call-stop:1' --button='Мне повезёт!starred:2' --button='Последние!clock:3' --text-align=center --center
+# 					yad --notebook --key=$start --tab=$"Искомое" --tab=$"По жанрам" --tab=$"По временам" --title="$progname" --buttons-layout=center --button='Отправить!gtk-apply:0' --button='Не желаю.!call-stop:1' --button='Мне повезёт!starred:2' --button='Последние!clock:3' --text-align=center --center
+yad --notebook --key=$start --tab=$"Искомое" --tab=$"По жанрам" --title="$progname" --buttons-layout=center --button='Отправить!gtk-apply:0' --button='Не желаю.!call-stop:1' --button='Мне повезёт!starred:2' --button='Последние!clock:3' --text-align=center --center
 					case $? in
    1) exit;;
 #   2) link=$(echo $(curl -l https://darklibria.it/random) 2>> .cvd.curl.tmp | sed 's/.*href="\/release\///g' | cut -d\" -f1)
@@ -180,7 +184,7 @@ if [ "$link" = q ] && [[ $@ != q ]] ; then echo Выход...;exit # выход 
 	#all=$(cat .cvd.tmp | grep -c '"code":')
 	all=$(wc -l id | cut -d' ' -f1)
 	if [ $(( all > 1 )) = 1 ]; then
-	h=$(($all * 25 + 92))
+	h=$(($all * 25 + 92 + 25)) #+ jutsu
 	#cat .cvd.tmp | cut -d'"' -f6 > .cvd.many.tmp
 	temp=0
 	rm -rf .cvd.many.tmp
@@ -194,6 +198,7 @@ until [ $temp = $all ];do let 'temp = temp + 1'; echo $(printf \";cat names-ru |
 #echo \#all=$all >> yad-alert3
 sed s/двойная\ хрень/'\\\"'/g yad-alert3 > yad-alert2
 mv yad-alert2 yad-alert3
+echo '"Попробовать поискать на Jut.su.."' >> yad-alert3
 #chosenbyheaven=$(bash yad-alert3 | cut -d\" -f2 | sed 's/\ \/\ .*//g')
 #curl https://darklibria.it/search?find=$codeplus$extra 2> .cvd.curl.tmp | grep -i '<a href="/release/' |  sed -e n\;d > .cvd.tmp
 #	echo $chosenbyheaven
@@ -201,7 +206,7 @@ mv yad-alert2 yad-alert3
 link=blank	#													Не верю я, нет, не верю, в то что использовал апи вэ2, в то что в луже багов утонул сей апи а ведь правдой было это. Не верю я, нет, не верю я что использовал таки апи вэ2, багкостыль не для нас, пусть и вэ1 не угас, знаю я ман перепас.
 link=$(sed $(grep -n "$(bash yad-alert3 > .cvd.tmp; echo $? > .cvd.1.tmp; cat .cvd.tmp| cut -d\" -f2 | sed 's/\ \/\ .*//g')" names-ru | head -n 1 | cut -d: -f1)\!D id | cut -c2-)
 	 if [ $(cat .cvd.1.tmp) = 1 ] || [ $(cat .cvd.1.tmp) = 252 ] ;then exit;fi
-	 echo $temp
+# 	 echo $temp
 #curl -Lf 'https://al.sdev.xyz/public/api/index.php' -F query=release -F id=$link 2>> .cvd.curl.tmp | jq 'if .status then .data else error(.error) end' > .cvd.tmp
 else
 #echo $all
@@ -420,7 +425,8 @@ esac
 	else echo '
 Неверная ссылка! 404!';echo Перезапуск..;"$0";exit;fi
 	if [[ "$link" != *episode-*.html ]]; then
-	echo $link
+	printf "\rПросмотр $link...
+"
 	jutlast=$(cat .cvd.tmp | grep -i '</i>' | grep -i Серия | rev | cut -d' ' -f2 | cut -d'>' -f1 | rev)
 	first=$(cat .cvd.tmp | grep -i '</i>' | grep -i Серия | sed 's/серия.*//g' | rev | cut -d\> -f1 | sed 's/^[ \t]*//;s/[ \t]*$//')
 	names=$(grep '<meta property="yandex_recommendations_title" content="' .cvd.tmp | sed s/'<meta property="yandex_recommendations_title" content="'/''/g | rev | cut -c5- | rev)
@@ -447,8 +453,8 @@ h=$(( 101 + $(grep the-anime-season .cvd.j.tmp | sed 's/.*>//g' | wc -l) * 25 ))
 	ch=$(echo yad --list --title=\""$progname"\" --column=\"Выберите сезон для просмотра\" $(grep the-anime-season .cvd.j.tmp | sed s/\>/'>"'/g | sed 's/.*>//g' | sed -e 's/$/\"/') --text \"Выбор сезона\" --hide-header --height=$h --center --text-align=center --width=249 --buttons-layout=center | bash | cut -d\| -f1)
 	fi
 	if [ $yad != 0 ]; then num=$(yad --scale --min-value=1 --title="$names" --max-value=$jutlast --text='Выбор серии' --min-value=$first --value=$first --text-align=center --center --width=$w --buttons-layout=center)
-	if [ $? = 252 ] || [ $? = 1 ]; then exit;fi
-	else printf "\rВведите номер серии от $first до $jutlast:"
+# 	if [ $? = 252 ] || [ $? = 1 ]; then exit;fi сломано! exit срабатывает всегда
+	else printf "\rВведите номер серии от $first до $jutlast: "
 	read num
 	fi
 	curl $link/episode-$num.html -A "" 2> .cvd.curl.tmp | iconv -f cp1251 > .cvd.tmp
@@ -477,7 +483,7 @@ h=$(( 101 + $(grep the-anime-season .cvd.j.tmp | sed 's/.*>//g' | wc -l) * 25 ))
 	names=$(echo $names) #Всем бед - один ответ..
 	if [ -z "$names" ]; then names=$(grep '<span itemprop="name">' .cvd.tmp | grep -i Смотреть | cut -d'<' -f3 | sed s/'\/span>'/''/g | cut -d'>' -f2 | sed 's/Смотреть/''/g;s/$num\ серия/''/g;s/$season\ сезон/''/g;s/^[ \t]*//;s/[ \t]*$//;s/[:\t]*$//');fi
 	if [ -z "$temp" ]; then :;else names=$(echo $names / $temp);fi
-	if [ $yad = 0 ]; then printf "\r$names";fi
+	if [ $yad = 0 ]; then printf "\rНадено названеи: $names";fi
 	fi
 	if [ $yad = 0 ] && [ "$description" != '' ] ; then
 	echo -e Описание: $(echo $description | sed s/'<b>'/\\\\033[1m/g | sed s/'<\/b>'/\\\\033[0m/g | sed s/'&quot;'/\"/g)
@@ -708,19 +714,22 @@ fi
 	   #fi
 	fi
 	elif [ $listing = jutsu ] && [ $mpv = 1 ]; then
-	echo $jutres > .cvd.jutres.tmp
-	mpv --user-agent='' $video $mpvargs --force-media-title="$(echo $names, серия $num, $(cat .cvd.reso.tmp))"
+# 	echo $jutres > .cvd.jutres.tmp
+# 	mpv --user-agent='' $video $mpvargs --force-media-title="$(echo $names, серия $num, $(cat .cvd.reso.tmp))"
+	mpv --user-agent='' $video $mpvargs --force-media-title="$(echo $names, серия $num)"
 	elif [ $listing != anilbria ] && [ $mpv = 0 ] && [ "$temp" != 0 ]; then #echo щас сREDACTEDдем..
+	err=1
 	until [ "$err" = 0 ]
 	do
-	temp=$(yad --file --save --confirm-overwrite='Вы уверены, что хотите перезаписать выбранный файл?' --filename="$title")
-	if [ -z "$temp" ]; then err=1
+	temp=$(yad --file --save --confirm-overwrite='Вы уверены, что хотите перезаписать выбранный файл?' --filename="$title"; echo $?> .cvd.tmp)
+	if [ $(cat .cvd.tmp) = 252 ] || [ $(cat .cvd.tmp) = 1 ]; then err=0;stop=1;fi
+	if [ -z "$temp" ] && [ $err != 0 ]; then err=1
 	else err=0;fi
 	done
 	#if [[ $temp != *.mkv ]] || [[ $temp != *.mp4 ]] || [[ $temp != *.avi ]] || [[ $temp != *.$cont ]]; then temp=$temp.$cont;fi
 	cont=$(echo $video | cut -d? -f1 | rev | cut -d. -f1 | rev)
 	if [[ "$temp" != *.$cont ]] && [ "$listing" != anilibria ]; then temp="$temp".$cont;fi
-	curl $video -L -A '' -o "$temp"
+	if [ "$stop" != 1 ]; then curl $video -L -A '' -o "$temp";fi
 	fi
 if (( $debug < 1 )); then rm -rf .cvd.*tmp; rm -rf yad-alert*
 elif (( $debug > 0 )); then echo first=$first
@@ -744,17 +753,17 @@ echo hd=$hd
 echo sd="$sd"
 echo notso=$notso
 echo res="$res"
-echo jutres=$jutres
+# echo jutres=$jutres
 echo video=$video
 echo listing=$listing
 echo code=$code
 echo codeplus=$codeplus
-echo Затрачено $(( $(date +%s) - $start )) секунд.
 fi
+echo Затрачено $(( $(date +%s) - $start )) секунд.
 
 
 #Джотаро
-#ты любишь джава массивы, Джотаро?
+#ты любишь жс массивы, Джотаро?
 #"names": [
 #    "Торадора!",
 #    "Toradora!"
