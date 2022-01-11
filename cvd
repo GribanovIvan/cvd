@@ -88,12 +88,23 @@ done
 fi
 																#приветствие.
 						else
+						if [ "$termux" = 1 ]; then
+						# link=$(termux-dialog -t "$gospod" | jq .text)
+						temp=$(termux-dialog -t "$gospod")
+						# echo $temp
+						# echo $temp | cut -c24- | rev | cut -c4- | rev					Никогда не бейте, кто и так не рад..
+						link=$(echo $temp | cut -c24- | rev | cut -c4- | rev)
+						if [[ "$(echo $temp)" = "-2" ]]; then exit;fi
+						# echo $link
+						else 
 						echo $gospod #				консольное	#приветствие.
 						read link # считыватель введенных аргуме.. А REDACTED его, просто костыль
+						fi
 					fi
 					link=$link | sed 's/^[ \t]*//;s/[ \t]*$//' | cut -d? -f1 #  отчикрыживатель пробелов в начале и конце. Спасибо, Hfib а потом откусыватель аргументов
 					while [[ "$link" = *\ \ * ]]; do var=$(echo "$link" | sed s/'  '/' '/g);done
-					if [ -z "$link" ]; then
+					if [ "$link" = '""' ]; then link='';fi
+					if [ -z "$link" ]; then exit
 					err=1;gospod='Самый умный? введи чёт.' #для глупых.
 					if [ $yad != 0 ];then yad --width=$cvdw  --center --text=$"без буков не как." --text-align=center --title="$progname" &
 					exit;fi
@@ -166,7 +177,8 @@ if [ "$link" = q ] && [[ $@ != q ]] ; then echo Выход...;exit # выход 
 	codeplus=$(echo $link | sed s/' '/+/g | sed s/-/+/g)			# рандомная REDACTEDня!! в бой!!, а если серьёзно ищет альтернативы.
 	#curl https://darklibria.it/search?find=$codeplus$extra 2> .cvd.curl.tmp | grep -i '<a href="/release/' |  sed -e n\;d > .cvd.tmp
 	#curl -Lf https://al.sdev.xyz/public/api/index.php 2> .cvd.curl.tmp -F query=search -F search="$link" | jq 'if .status then .data else error(.error) end' > .cvd.tmp #| grep -o '"code":' | wc -l
-		if [ $yad = 0 ];then printf "Отправка запроса.."
+		if [ $yad = 0 ] && [ "$termux" != 1 ] ;then printf "Отправка запроса.."
+		elif [ "$termux" = 1 ]; then echo noofixme
 	#else echo "# Отправка запроса"
 	fi
 	if [ "$link" = showlast ]; then
@@ -374,7 +386,7 @@ esac
 	temp=$(xdpyinfo | grep 'dimensions:' | cut -d' ' -f7);yad --no-buttons --title=Описание --text "$description" --show-cursor --show-uri --width=$(( $(echo $temp | cut -d'x' -f1 ) / 3 )) --posx=$(( $( echo $temp | cut -d'x' -f1) / 24 )) --posy=$(( $( echo $temp | cut -d'x' -f2) * 3 / 5 )) --on-top --skip-taskbar &
 	descpid=$!
 	fi
-	if [ $yad = 0 ]; then
+	if [ $yad = 0 ] && [ "$termux" != 1 ]; then
 	printf "\rСтатус аниме: "
 	if [ "$status" = ready ]; then echo Полностью вышло
 	else
@@ -387,6 +399,11 @@ esac
 		echo е: $names
 		fi
 	if (( debug > 1 )); then echo $resp;  fi
+	elif [ "$termux" = 1 ]; then
+
+if [ "$status" = ready ]; then termux-
+fi
+
 	else
 		if [ "$lfhd" != 0 ]; then h=200;shit='1080p' # 168 157
 		hdname='720p'
