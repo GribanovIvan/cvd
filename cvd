@@ -4,7 +4,9 @@ start=$(date +%s) # требуеться для посчёта времени з
 if [ "$yad" = 1 ]; then yadF=1;echo yad forced.;fi
 if [ "$DISPLAY" = '' ] ;then yad=0;if [ -d /data/data/com.termux/ ];then echo При возникновении проблем с Mx Player или LazyMedia
 echo используйте другй плеер, например Kmplayer или VLC
-termux=1;fi;fi
+termux=1
+termux-api-start&
+fi;fi
 rm -rf .cvd*tmp
 touch .cvd.link.tmp
 argsV='-y -c copy -bsf:a aac_adtstoasc' # аргументы для скачивания видео (только ffmpeg)
@@ -178,7 +180,7 @@ if [ "$link" = q ] && [[ $@ != q ]] ; then echo Выход...;exit # выход 
 	#curl https://darklibria.it/search?find=$codeplus$extra 2> .cvd.curl.tmp | grep -i '<a href="/release/' |  sed -e n\;d > .cvd.tmp
 	#curl -Lf https://al.sdev.xyz/public/api/index.php 2> .cvd.curl.tmp -F query=search -F search="$link" | jq 'if .status then .data else error(.error) end' > .cvd.tmp #| grep -o '"code":' | wc -l
 		if [ $yad = 0 ] && [ "$termux" != 1 ] ;then printf "Отправка запроса.."
-		elif [ "$termux" = 1 ]; then echo noofixme
+		elif [ "$termux" = 1 ]; then termux-toast -g bottom Подождите..
 	#else echo "# Отправка запроса"
 	fi
 	if [ "$link" = showlast ]; then
@@ -300,7 +302,7 @@ esac
 		    fi
 		 done
 	   id=$link
-	if [ $yad = 0 ];then printf "Отправка запроса.."
+	if [ $yad = 0 ] && [ "$termux" != 1 ] ;then printf "Отправка запроса.."
 	#else echo "# Отправка запроса"
 	fi
 	#resp=$(curl -Lf 'https://www.anilibria.tv/public/api/index.php' -F query=release -F $findby=$link 2> .cvd.tmp) короче, это зеркало проседает на 100мс, лучшее что я нашёл. в расие работает.
