@@ -65,7 +65,7 @@ yad --notebook --key=$start --tab=$"Искомое" --tab=$"По жанрам" -
 					case $? in
    1) exit;;
 #   2) link=$(echo $(curl -l https://darklibria.it/random) 2>> .cvd.curl.tmp | sed 's/.*href="\/release\///g' | cut -d\" -f1)
-	2) link=$(curl http://api.anilibria.tv/v2.9.1/getRandomTitle?filter=id 2> .cvd.curl.tmp | cut -d\: -f2 | cut -d\} -f1) #
+	2) link=$(curl http://api.anilibria.tv/v2/getRandomTitle?filter=id 2> .cvd.curl.tmp | cut -d\: -f2 | cut -d\} -f1) #
 #	2) link=$(curl -Lf 'https://al.sdev.xyz/public/api/index.php' -F query=random_release 2>> .cvd.curl.tmp | cut -d\" -f8
    #link=pet-na-kanojo REDACTEDня, которая есть и на либре, и на джутсу, кстати годное аниму
    findby=id;err=0;anilibria=1
@@ -114,7 +114,7 @@ fi
 					fi
 									done
 fi
-if [ "$link" = random ]; then link=$(curl http://api.anilibria.tv/v2.9.1/getRandomTitle?filter=id 2>> .cvd.curl.tmp| cut -d\: -f2 | cut -d\} -f1);fi
+if [ "$link" = random ]; then link=$(curl http://api.anilibria.tv/v2/getRandomTitle?filter=id 2>> .cvd.curl.tmp| cut -d\: -f2 | cut -d\} -f1);fi
 if (( $debug > 2 )); then echo first2 done.;fi
 if [ "$link" = q ] && [[ $@ != q ]] ; then echo Выход...;exit # выход при вводе q
     elif [[ "$link" = http*://*.libria.fun/videos/ts/* ]] ; then							#доREDACTEDа
@@ -144,7 +144,8 @@ if [ "$link" = q ] && [[ $@ != q ]] ; then echo Выход...;exit # выход 
 	listing=sibnet
 	curl "$link" 2>> .cvd.curl.tmp > .cvd.tmp
 	video=$(printf https://$(curl https://video.sibnet.ru$(cat .cvd.tmp | grep -i .mp4 | sed s/.*player.src//g | cut -d\" -f2) -e "$link" -I 2>> .cvd.curl.tmp | grep -i Location | cut -c13- | rev | cut -c2- | rev))
-	title=$(cat .cvd.tmp | grep -i data-title | cut -d\\ -f2 | cut -c2- | sed s/\amp\;//g)
+# 	title=$(iconv -f windows-1251 .cvd.tmp | grep -a data-title | cut -d\\ -f2 | cut -c2- | sed s/\amp\;//g)
+	title=$(iconv -f windows-1251 .cvd.tmp | grep 'og:title' | cut -d\" -f4)
 	listing=raw
 	echo '|FALSE|FALSE|' > .cvd.link.tmp
 	elif [[ "$link" = http*://video.sibnet.ru/video* ]]; then
@@ -152,7 +153,8 @@ if [ "$link" = q ] && [[ $@ != q ]] ; then echo Выход...;exit # выход 
 	listing=sibnet
 	curl "$link" 2>> .cvd.curl.tmp > .cvd.tmp
 	video=$(printf https://$(curl https://video.sibnet.ru$(cat .cvd.tmp | grep -i .mp4 | sed s/.*player.src//g | cut -d\" -f2) -e "$link" -I 2>> .cvd.curl.tmp | grep -i Location | cut -c13- | rev | cut -c2- | rev))
-	title=$(cat .cvd.tmp | grep -i data-title | cut -d\\ -f2 | cut -c2- | sed s/\amp\;//g)
+#  	title=$(iconv -f windows-1251 .cvd.tmp | grep -a data-title | cut -d\\ -f2 | cut -c2- | sed s/\amp\;//g)
+	title=$(iconv -f windows-1251 .cvd.tmp | grep 'og:title' | cut -d\" -f4)
 	listing=raw
 	echo '|FALSE|FALSE|' > .cvd.link.tmp
 	#elif [[ "$link" = http*://anime.anidub.life/anime/full/*.html ]]; then
@@ -335,11 +337,10 @@ esac
 		#fi
 	#fhd=$(grep 'hd/playlist.m3u8' .cvd.tmp)
 	lfhd=$(cat .cvd.tmp | sed s/'"fhd"\: null,'/null/ | grep -i fhd | cut -d'
-' -f1 | cut -c35-38
-)
+' -f1 | cut -d\/ -f6)
 											if [ ${#lfhd} = 0 ]; then lfhd=0
 											fi
-	ll=$(grep host .cvd.tmp | cut -d\" -f4)/
+	ll=$(grep host .cvd.tmp | cut -d\" -f4)
 	if [[ $(cat .cvd.tmp) = *cut*--help* ]];
 	then
 	#if [ -есть) .cvd.tmp ]; then echo 'отвевет не получен! ошибка #1'
@@ -361,9 +362,11 @@ esac
 	names=$(echo $(echo $temp | cut -d\" -f6; echo \/;echo $temp | cut -d\" -f10))
 	if [ $findby = code ]; then findby=id; id=$(echo $resp | cut -d, -f2 | cut -c14-);fi #хочешь жить - перекрестись. И попробуй вспомнить что-то из молитвы..
 
-	shitnum=$(cat .cvd.tmp | grep -i series | cut -d'
-' -f2 | rev | cut -c3- | cut -d'"' -f1 | rev)
-	if [ "$shitnum" != $first-$last ] && [ $first != $last ]; then
+#	shitnum=$(cat .cvd.tmp | grep -i series | cut -d'
+#' -f2 | rev | cut -c3- | cut -d'"' -f1 | rev)
+    shitnum=$(jq .player.series.string .cvd.tmp)
+    shitnum=$(echo $shitnum | cut -d\" -f2)
+    if [ "$shitnum" != $first-$last ] && [ $first != $last ]; then
 	wtf=1
 	if ((debug > 0)); then echo shit heppens.;fi
 	let 'shitometr = first - 1' # лол хз а может плюс
@@ -576,8 +579,13 @@ h=$(( 101 + $(grep the-anime-season .cvd.j.tmp | sed 's/.*>//g' | wc -l) * 25 ))
 	fi
 	if (("${#num}" < "4")) && [ "$listing" = anilibria ]; then num=0001;fi #путин помог UPD: я не помню что это, но тут явно чет не так UPD2: вроде бы жив,но как будь-то и нет #UPD3 ааха REDACTEDть ломает джитсу
 	if [ "$err" = no ]; then
-	if [ "$listing" = anilibria ];then	if (( $debug > 1 )); then echo "hey, im trying to ffprobe -v error -select_streams v:0 -show_entries stream=width,height -of csv=s=x:p=0 https://"$ll"videos/ts/$id/$num$res/playlist.m3u8"; fi
-	ffprobe -v error -select_streams v:0 -show_entries stream=width,height -of csv=s=x:p=0 https://"$ll"videos/ts/$id/$num$res/playlist.m3u8  | cut -d'
+	if [ "$listing" = anilibria ];then
+	tmp=$(sed 's/hls/Z/g;s/description/Z/g' .cvd.tmp)
+	if (( $debug > 1 )); then
+	echo "hey, im trying to ffprobe -v error -select_streams v:0 -show_entries stream=width,height -of csv=s=x:p=0 https://"$ll"$(echo $tmp | cut -dZ -f2 | cut -d\" -f5)"; fi
+	probe=$(echo $tmp | cut -dZ -f2 | cut -d\" -f5)
+	if [ "$probe" = hd ]; then probe=$(echo $tmp | cut -dZ -f2 | cut -d\" -f7);fi
+	ffprobe -v error -select_streams v:0 -show_entries stream=width,height -of csv=s=x:p=0 https://"$ll"$probe  | cut -d'
 ' -f1 > .cvd.reso.tmp & 
 	fi # получатель разрешения, на свет вылез в pre-0.5
 	fi
@@ -633,7 +641,7 @@ h=$(( 101 + $(grep the-anime-season .cvd.j.tmp | sed 's/.*>//g' | wc -l) * 25 ))
 esac
 elif [ $yad = 0 ] && [ $listing = raw ]; then echo открыть видео в mpv?
 until [ "$fail" = 0 ]; do read mpv
-mpv = $(echo mpv | tr [:upper:] [:lower:])
+mpv=$(echo $mpv | tr [:upper:] [:lower:])
 if [[ "$mpv" = *1* ]] || [[ "$mpv" = *да* ]] || [[ "$mpv" = *+* ]] || [[ "$mpv" = *угу* ]] || [[ "$mpv" = *ага* ]] || [[ "$mpv" = *ок* ]] || [[ "$mpv" = *mpv* ]] || [[ "$mpv" = *play* ]] || [[ "$mpv" = *vlc* ]] || [[ "$mpv" = *mx* ]] || [[ "$mpv" = *kmp* ]] || [[ "$mpv" = *dvix* ]] || [[ "$mpv" = y ]] || [[ "$mpv" = *д* ]] || [[ "$mpv" = *yes* ]] || [[ "$mpv" = *yep* ]] || [[ "$mpv" = *go* ]] || [[ "$mpv" = *do\ it* ]]; then mpv=1;fail=0
 elif [[ "$mpv" = *0* ]] || [[ "$mpv" = *нет* ]] || [[ "$mpv" = *-* ]] || [[ "$mpv" = *ffmpeg* ]] || [[ "$mpv" = *down* ]] || [[ "$mpv" = n ]] || [[ "$mpv" = н ]]; then mpv=0;fail=0
 else fail=1;echo нераспознано
@@ -712,14 +720,20 @@ fi
 	   if (( debug > 1 )); then echo seems mpv=1, num=$num, temp=$temp; fi		# REDACTED REDACTEDть
 	   temp=1																	# какого REDACTED оно не пашет то REDACTEDть?
 	   echo '#EXTM3U' > videos.m3u
+	   if [ $lfhd = 0 ]; then
+	   if [ "$res" = '' ]; then res=7
+	   elif [ "$res" = '-sd' ]; then res=11;fi
+	   else
+	   if [ "$res" = '-hd' ]; then res=5
+	   elif [ "$res" = '' ]; then res=9
+	   elif [ "$res" = '-sd' ]; then res=13;fi;fi
 	   until [ $temp = $(( $last + 1 )) ]										# REDACTEDы REDACTEDть
 	   do																		# REDACTED REDACTEDть
-	   num=000$temp;num=$(echo $num | cut -c${#temp}-7)							# так вот в чём дело то, починю баг щас REDACTEDть
+	   #num=000$temp;num=$(echo $num | cut -c${#temp}-7)							# так вот в чём дело то, починю баг щас REDACTEDть
 	   #videos="$videos https://"$ll"videos/ts/$id/$num$res/playlist.m3u8"
 	   echo \#EXTINF:-1,$names $temp $(echo $res | cut -c2- | tr a-z A-Z) >> videos.m3u
-	   echo https://"$ll"videos/ts/$id/$num$res/playlist.m3u8 >> videos.m3u
-	   let 'temp = temp + 1'
-	   #echo $videos
+	   echo https://"$ll"$(echo $tmp | cut -dZ -f$((temp + 1)) | cut -d\" -f$res) >> videos.m3u
+	   let 'temp= temp + 1'
 	   done
 	   echo \#EXT-X-ENDLIST >> videos.m3u
 	   #echo debug exit. you are using broken program.; exit
