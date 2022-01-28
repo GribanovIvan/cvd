@@ -14,13 +14,13 @@ argsA='-y -bsf:a aac_adtstoasc' # аргументы для скачивания
 link=$@ # костыльный ком, нужно будет его убрать.. наверное...
 cont=mkv # контейнер для скачанных файлов
 downtime=10 # задежка между попытками скачать новую серию
-debug=1 # debug level (вот это поворот)
+debug=0 # debug level (вот это поворот)
 gospod='Чего желаете, господин?' # входное сообщение
 cvdw=213 # Ширина маленьких окон
 progname='CVD 0.5' # кодовое название
 #$(cat ~/.config/cvd)
 if [ "$yad" = 0 ] && [ "$yad" != termux ]; then :; else
-yad=0 # GUI
+yad=1 # GUI
 fi
 if [ "$yadF" = 1 ]; then yad=1;fi
 if [ $yad != 0 ] && [[ "$@" = '' ]] ; then
@@ -688,13 +688,15 @@ fi
 	 #done
 	  #ffmpeg -i https://"$ll"videos/ts/$id/$num$res/playlist.m3u8 $argsV "$num"["$(cat .cvd.reso.tmp)"].$cont #2>&1 | grep -i --line-buffered frame | cut -d= -f2 #| sed -u s/fps/''/g
 	   if (( $debug > 1 )); then echo fiecho target 4 done. code name: torrent;fi;fi
-	   all=$(echo $resp | sed s/.*\"torrents\"\:\ \{//g | grep -o /upload/torrents | wc -l)
+	   all=$(echo $resp | sed s/.*\"torrents\"\:\ \{//g | grep -o \/torrent | wc -l)
 # 	   echo $resp > 123
 	   if [ $mpv = 0 ] && [ $yad = 0 ]; then echo Найдено несколько торрентов.. Выберите один
 	   temp=0
         until [ $temp = $all ];do
-        let ' temp = temp + 1 '
-        echo $temp\) Серии $(echo $resp | sed s/.*\"torrents\"\://g | sed s/},{/^/g | cut -d\^ -f$temp | sed s/.*series//g | cut -d\} -f1 | rev | cut -d\" -f2 | rev), $(echo $resp sed s/.*\"torrents\"\://g | sed s/},{/^/g | cut -d\^ -f$temp | sed s/.*quality//g | cut -d\} -f1 | sed s/.*string//g | cut -d\" -f3), $(echo $resp | sed s/.*\"torrents\"\://g | sed s/},{/^/g | cut -d\^ -f$temp | sed s/.*seeders//g | cut -c3- | cut -d\, -f1) сидов, $(bc<<<"scale=2;$(echo $resp | sed s/.*\"torrents\"\://g | sed s/},{/^/g | cut -d\^ -f$temp | sed s/.*total_size\"://g | cut -d, -f1)/1073741824")GiB, $(date --date @$(echo $(echo $resp | sed s/.*\"torrents\"\://g | sed s/},{/^/g | cut -d\^ -f$temp | sed s/.*uploaded_timestamp\"://g | cut -d, -f1)))
+        let 'temp = temp + 1'
+        if (( $(echo $resp | sed s/.*\"torrents\"\://g | sed s/},{/^/g | cut -d\^ -f2 | sed s/.*total_size\"://g | cut -d, -f1) < 1073741824 )); then
+        gib=MiB;mnogo='1052672'; else mnogo=1073741824;gib=GiB;fi
+        echo $temp\) Серии $(echo $resp | sed s/.*\"torrents\"\://g | sed s/},{/^/g | cut -d\^ -f$temp | sed s/.*series//g | cut -d\} -f1 | rev | cut -d\" -f2 | rev), $(echo $resp sed s/.*\"torrents\"\://g | sed s/},{/^/g | cut -d\^ -f$temp | sed s/.*quality//g | cut -d\} -f1 | sed s/.*string//g | cut -d\" -f3), $(echo $resp | sed s/.*\"torrents\"\://g | sed s/},{/^/g | cut -d\^ -f$temp | sed s/.*seeders//g | cut -c3- | cut -d\, -f1) сидов, $(bc<<<"scale=2;$(echo $resp | sed s/.*\"torrents\"\://g | sed s/},{/^/g | cut -d\^ -f$temp | sed s/.*total_size\"://g | cut -d, -f1)/$mnogo")$gib, $(date --date @$(echo $(echo $resp | sed s/.*\"torrents\"\://g | sed s/},{/^/g | cut -d\^ -f$temp | sed s/.*uploaded_timestamp\"://g | cut -d, -f1)))
         done
 	   read temp
 	   $(grep application/x-bittorrent /usr/share/applications/mimeinfo.cache | cut -d\= -f2 | cut -d. -f2) http://cvd.anilib.top$(echo $resp | sed s/.*\"torrents\"\://g | sed s/},{/^/g | cut -d\^ -f$temp | sed s/.*\"url\"\:\"//g | cut -d\" -f1)&
@@ -702,8 +704,10 @@ fi
 	   if [ $mpv = 0 ] && [ $yad != 0 ] ; then
 	  temp=0
 	  chosenbyheaven=$(echo yad --list --title=\"$names\" --column=\"Выбор торрента\" $(until [ $temp = $all ];do
-        let ' temp = temp + 1 '
-        echo \"Серии $(echo $resp | sed s/.*\"torrents\"\://g | sed s/},{/^/g | cut -d\^ -f$temp | sed s/.*series//g | cut -d\} -f1 | rev | cut -d\" -f2 | rev), $(echo $resp sed s/.*\"torrents\"\://g | sed s/},{/^/g | cut -d\^ -f$temp | sed s/.*quality//g | cut -d\} -f1 | sed s/.*string//g | cut -d\" -f3), $(echo $resp | sed s/.*\"torrents\"\://g | sed s/},{/^/g | cut -d\^ -f$temp | sed s/.*seeders//g | cut -c3- | cut -d\, -f1) сидов, $(bc<<<"scale=2;$(echo $resp | sed s/.*\"torrents\"\://g | sed s/},{/^/g | cut -d\^ -f$temp | sed s/.*total_size\"://g | cut -d, -f1)/1073741824")GiB, $(date --date @$(echo $resp | sed s/.*\"torrents\"\://g | sed s/},{/^/g | cut -d\^ -f$temp | sed s/.*uploaded_timestamp\"://g | cut -d, -f1))\"
+        let 'temp = temp + 1'
+        if (( $(echo $resp | sed s/.*\"torrents\"\://g | sed s/},{/^/g | cut -d\^ -f2 | sed s/.*total_size\"://g | cut -d, -f1) < 1073741824 )); then
+        gib=MiB;mnogo='1052672'; else mnogo=1073741824;gib=GiB;fi
+        echo \"Серии $(echo $resp | sed s/.*\"torrents\"\://g | sed s/},{/^/g | cut -d\^ -f$temp | sed s/.*series//g | cut -d\} -f1 | rev | cut -d\" -f2 | rev), $(echo $resp sed s/.*\"torrents\"\://g | sed s/},{/^/g | cut -d\^ -f$temp | sed s/.*quality//g | cut -d\} -f1 | sed s/.*string//g | cut -d\" -f3), $(echo $resp | sed s/.*\"torrents\"\://g | sed s/},{/^/g | cut -d\^ -f$temp | sed s/.*seeders//g | cut -c3- | cut -d\, -f1) сидов, $(bc<<<"scale=2;$(echo $resp | sed s/.*\"torrents\"\://g | sed s/},{/^/g | cut -d\^ -f$temp | sed s/.*total_size\"://g | cut -d, -f1)/$mnogo")$gib, $(date --date @$(echo $resp | sed s/.*\"torrents\"\://g | sed s/},{/^/g | cut -d\^ -f$temp | sed s/.*uploaded_timestamp\"://g | cut -d, -f1))\"
         done) --hide-header --height=$((151 + $temp * 24)) --text-align=center --center --width=$(($(echo $(xdpyinfo | grep 'dimensions:' | cut -dx -f1 | rev | cut -c1-7) | rev) * 2 / 5)) --buttons-layout=center --text-align=center | bash)
         until [ "$temp" -ge $all ]; do
         let ' temp = temp + 1 '
