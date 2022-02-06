@@ -699,7 +699,8 @@ fi
         echo $temp\) Серии $(echo $resp | sed s/.*\"torrents\"\://g | sed s/},{/^/g | cut -d\^ -f$temp | sed s/.*series//g | cut -d\} -f1 | rev | cut -d\" -f2 | rev), $(echo $resp sed s/.*\"torrents\"\://g | sed s/},{/^/g | cut -d\^ -f$temp | sed s/.*quality//g | cut -d\} -f1 | sed s/.*string//g | cut -d\" -f3), $(echo $resp | sed s/.*\"torrents\"\://g | sed s/},{/^/g | cut -d\^ -f$temp | sed s/.*seeders//g | cut -c3- | cut -d\, -f1) сидов, $(bc<<<"scale=2;$(echo $resp | sed s/.*\"torrents\"\://g | sed s/},{/^/g | cut -d\^ -f$temp | sed s/.*total_size\"://g | cut -d, -f1)/$mnogo")$gib, $(date --date @$(echo $(echo $resp | sed s/.*\"torrents\"\://g | sed s/},{/^/g | cut -d\^ -f$temp | sed s/.*uploaded_timestamp\"://g | cut -d, -f1)))
         done
 	   read temp
-	   $(grep application/x-bittorrent /usr/share/applications/mimeinfo.cache | cut -d\= -f2 | cut -d. -f2) http://cvd.anilib.top$(echo $resp | sed s/.*\"torrents\"\://g | sed s/},{/^/g | cut -d\^ -f$temp | sed s/.*\"url\"\:\"//g | cut -d\" -f1)&
+	   $(grep Exec /usr/share/applications/$(grep application/x-bittorrent /usr/share/applications/mimeinfo.cache | cut -d\= -f2 | cut -d\; -f1) | sed 's/%U//g;s/'Exec='//g' | cut -d'
+' -f1) http://cvd.anilib.top$(echo $resp | sed s/.*\"torrents\"\://g | sed s/},{/^/g | cut -d\^ -f$temp | sed s/.*\"url\"\:\"//g | cut -d\" -f1)&
 	   fi
 	   if [ $mpv = 0 ] && [ $yad != 0 ] ; then
 	  temp=0
@@ -714,7 +715,8 @@ fi
         #echo $temp
         kill $descpid 2>> /dev/null&
         if [ "$(echo $(echo $chosenbyheaven | cut -d, -f2))"  = "$(echo $resp sed s/.*\"torrents\"\://g | sed s/},{/^/g | cut -d\^ -f$temp | sed s/.*quality//g | cut -d\} -f1 | sed s/.*string//g | cut -d\" -f3)" ]; then
-        $(grep application/x-bittorrent /usr/share/applications/mimeinfo.cache | cut -d\= -f2 | cut -d. -f2) http://cvd.anilib.top$(echo $resp | sed s/.*\"torrents\"\://g | sed s/},{/^/g | cut -d\^ -f$temp | sed s/.*\"url\"\:\"//g | cut -d\" -f1)&
+        $(grep Exec /usr/share/applications/$(grep application/x-bittorrent /usr/share/applications/mimeinfo.cache | cut -d\= -f2 | cut -d\; -f1) | sed 's/%U//g;s/'Exec='//g' | cut -d'
+' -f1) http://cvd.anilib.top$(echo $resp | sed s/.*\"torrents\"\://g | sed s/},{/^/g | cut -d\^ -f$temp | sed s/.*\"url\"\:\"//g | cut -d\" -f1)&
         break;fi
         done
 	   fi
