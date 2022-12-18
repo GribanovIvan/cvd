@@ -121,10 +121,10 @@ const auto response = request.send("GET");
            while (i<t2){respt=respt.substr(respt.find("id\"")+4);++i;}
            std::string idt=respt.substr(respt.find("torrent_id")+12);idt=idt.substr(0,idt.find(","));
            if (addr != "" && qbittorrent != "" && want == -1){std::cout<< "1) torrserver"<<std::endl<<"2) "<<qbittorrent<<std::endl; //"Введите 1 для открытия " << qbittorrent <<", введите 1XX для начала просмотра XX серии с помощью torrserver"<<std::endl;
-unsigned short i;std::cin>>i;if(i==2){system((qbittorrent + " " + mirror + idt +last + "&").c_str());} else if (i==1)system((mpv +" 'http://" + addr + "/stream?link=" + mirror + idt +last + "&preload&m3u'").c_str());}else
+               std::string i;std::cin>>i;if(i=="2"){system((qbittorrent + " " + mirror + idt + last + "&").c_str());} else if (i.substr(0,1)=="1") {if (i.substr(0,1)==i) system((mpv + " 'http://" + addr + "/stream?link=" + mirror + idt + last + "&preload&m3u'").c_str()); else system((mpv + " 'http://" + addr + "/stream?link=" + mirror + idt + last + "&preload&m3u'" + " --playlist-start=" + std::to_string((stod(i.substr(1)) - 1))).c_str());}}else
            if (qbittorrent == "" || want != -1){if (mpv == "mplayer"){mpv="mplayer -playlist";if(addr.length()<30)mpv= "mplayer -prefer-ipv4 -playlist";}
            if (mpv == "mpv --write-filename-in-watch-later-config --watch-later-directory=~/config/cvd/mpv_watch_later" && want != -1){mpv = mpv + " --playlist-start="+std::to_string(want);}
-               system((mpv +" 'http://" + addr + "/stream?link=" + mirror + idt +last + "&preload&m3u'").c_str());}
+               system((mpv +" 'http://" + addr + "/stream?link=" + mirror + idt  +last + "&preload&m3u'").c_str());}
            else if (addr == "")system((qbittorrent + " " + mirror + idt +last + "&").c_str());}}
 bool is_number(const std::string& s)
 {
@@ -145,7 +145,7 @@ const char *homedir = pw->pw_dir;
 //     }
 //     myfile.close();
 //   }
-       unsigned char limit = 50;
+       std::string limit = "50";
        std::string qbittorrent;
        std::string addr;
        std::string darklibria;
@@ -166,28 +166,30 @@ const char *homedir = pw->pw_dir;
             auto value = line.substr(delimiterPos + 1);
 
             //Custom coding
-            if (name == "limit") limit = stod(value);
-            else if (name == "player") mpv = value;
+            if (name == "limit") limit = value;
+            else if (name == "player") if (value == "mpv")mpv = "mpv --write-filename-in-watch-later-config --watch-later-directory=~/config/cvd/mpv_watch_later"; else mpv = value;
             else if (name == "darklike") dark = value;
             else if (name == "libriamirror") darklibria = value;
             else if (name == "torrserver") addr = value;
             else if (name == "torrent") qbittorrent = value;
+            else if (name == "confverA") {if (stod(value) < 0){std::cout << "Конфиг устарел! Продолжать работу невозможно." << std::endl;return 1;}}
+            else if (name == "confverB") {if (stod(value) < 0){std::cout << "Конфиг устарел! Новые функции недоступны." << std::endl;}}
+            else if (name == "confverC") {if (stod(value) > 0){std::cout << "Версия программы устарела! Замените текущий конфиг на подходящий для этой версии или обновите программу. Продолжать работу невозможно." << std::endl; return 1;}}
         }
     }
     else std::cerr << "No user config file!" << std::endl;
-if (mpv == "mpv")mpv="mpv --write-filename-in-watch-later-config --watch-later-directory=~/config/cvd/mpv_watch_later";
 std::string in,req;
     if(IsPathExist("/data/data/com.termux")){std::cout << "you're in termux. This is experemntal. The program WILL NOT fully work." << std::endl << "Continue?(y/n)";std::cin >> in; if(in == "n"){std::cout << "'No' detected, exiting.." << std::endl;return 0;}else{
 system("/data/data/com.termux/files/usr/bin/termux-api-start >/dev/null&");}}
     std::cout << "AniLibria search." << std::endl;
     if (args > 1)for(int i=0; i < strlen(arg[1]); i++)
                 in=in+arg[1][i];else std::cin >> in;
-    if (args > 2)limit=std::stod(arg[2]);
+    if (args > 2)limit=arg[2];
 if (is_number(in)){if (stod(in) > 380 && stod(in) < 10000)AniLibriaById(in,qbittorrent,addr,darklibria,dark,mpv);}else
     try
 {
-if (in == "showlast")req="http://api.anilibria.tv/v2/getChanges?limit=" + std::to_string(limit) + "&filter=names,id&show_hidden=1"; else
-req="http://api.anilibria.tv/v2/searchTitles?limit=" + std::to_string(limit) + "&filter=names,id&show_hidden=1&search=" + url_encode(in);
+if (in == "showlast")req="http://api.anilibria.tv/v2/getChanges?filter=names,id&show_hidden=1&limit=" + limit; else
+req="http://api.anilibria.tv/v2/searchTitles?filter=names,id&show_hidden=1&limit=" + limit + "&search=" + url_encode(in);
 http::Request request{req};
 const auto response = request.send("GET");
  std::cout << "got ?" << std::endl;
