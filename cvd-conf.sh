@@ -5,7 +5,8 @@ if [ "$limit" = '' ]; then limit=50;fi
 echo Выберите желаемый плеер для видео:
 i=0; for f in $(sh -c 'gio mime video/mp4;gio mime audio/x-mpegurl' | sort | uniq -cd | grep -v \: | grep -v mediainfo | sed s/'      4 '//g | sed s/.desktop//g); do let 'i = i + 1'; echo $i\) $f;done
 mpv=$(xdg-mime query default video/mp4 | sed s/.desktop//g)
-if [ "$(type "$mpv" 2>/dev/null)" = "" ]; then echo problem;else echo ok;fi
+if [ "$(type "$mpv" 2>/dev/null)" = "" ]; then mpv=$(grep Exec /usr/share/applications/$(xdg-mime query default xdg-mime query default video/mp4) | cut -d'
+' -f1 | sed s/TryExec=//g | sed s/Exec=//g | sed s/' %U'//g);fi
 printf \($mpv\):\ 
 read player
 if [ "$player" = '' ]; then player=$mpv;
@@ -20,7 +21,7 @@ echo Введите адрес torrserver, если таковой имеетс�
 if [[ $(curl 127.0.0.1:8090 2>/dev/null) = *torrserver* ]];then mpv=127.0.0.1:8090;printf \($mpv\):\ ;fi
 read torrserver
 if [ "$torrserver" = '' ] && [ "$mpv" = 127.0.0.1:8090 ]; then torrserver=127.0.0.1:8090
-else
+elif [ "$torrserver" = '' ]; then torrserver=....:none; else
 until [[ "$torrserver" = *.*.*.*:* ]]; do echo Неверный формат.;read torrserver;done
 fi
 echo Выберите желаемый торрент-клиент:
@@ -37,13 +38,22 @@ if [ "$torrent" -le "$all" ] && [ "$torrent" -gt 0 ]; then torrent=$(grep Exec /
 ' -f$torrent)| cut -d'
 ' -f1 | cut -c9-)
 fi 2>/dev/null;fi
+echo 'Выполнять поиск по скрытым источникам? (ИСЛЮЧИТЕЛЬНО ДЛЯ ОЗНАКОМЛЕНИЯ, ЗАПРЕЩЕНО КОММЕРЧЕСКОЕ ИСПОЛЬЗОВАНИЕ'
+printf \(нет\)\:
+until [ "$iregretnothing" = 0 ] || [ "$iregretnothing" = 1 ]; do read iregretnothing
+if [[ ${iregretnothing,,} = *y* ]] || [[ ${iregretnothing,,} = *д* ]] || [[ ${iregretnothing,,} = *т* ]]; then iregretnothing=1;
+elif [[ ${iregretnothing,,} = *n* ]] || [[ ${iregretnothing,,} = *н* ]] || [[ "$iregretnothing" = '' ]]; then iregretnothing=0;fi;done
 darklink=$(curl 2>/dev/null https://darklibria.it/search?find=senko | grep register_click | grep btn | sed s/.*href=\"//g | cut -d\" -f1 | sed s/'release\/sewayaki-kitsune-no-senko-san'/'upload\/torrents\/'/g)
+mkdir -p ~/.config/cvd
 if [ $(echo "$(curl -w %{time_total} -o /dev/null -s https://anilibria.tv/public/torrent) > $(curl -w %{time_total} -o /dev/null -s $darklink)" | bc) -eq 1 ]; then
 echo libriamirror=https://anilibria.tv/public/torrent/download.php?id= > ~/.config/cvd/cvd.conf;else echo "darklike=.torrent
 libriamirror=$darklink" > ~/.config/cvd/cvd.conf;fi
+if [[ $torrserver != *none ]]; then echo torrserver=$torrserver >> ~/.config/cvd/cvd.conf;fi
 echo "limit=$limit
 player=$player
-torrserver=$torrserver
 torrent=$torrent
+iregretnothing=$iregretnothing
+#do not edit below
 confverA=0
-confverB=0" >> ~/.config/cvd/cvd.conf
+confverB=1
+confverC=0" >> ~/.config/cvd/cvd.conf

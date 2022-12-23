@@ -1,12 +1,14 @@
 #include <iostream>
-#include "HTTPRequest.hpp"
 #include <sys/stat.h>
 #include <fstream>
+#ifdef unix
 #include <pwd.h>
+#endif
 #include <sstream>
 #include <iomanip>
 #include <cmath>
-//An unnamed cvd cxx build. Hello, github!
+#include "httplib.h"
+//сos? sin?
 bool IsPathExist(const std::string &s)
 {
   struct stat buffer;
@@ -58,9 +60,7 @@ std::string url_encode(const std::string &value) {
     return escaped.str();
 }
 void AniLibriaById(std::string id,std::string qbittorrent,std::string addr,std::string mirror,std::string last,std::string mpv){
-http::Request request{"http://api.anilibria.tv/v2/getTitle?show_hidden=1&filter=team.voice,type.length,playlist,torrents.list,player.host,player.series,player.playlist&id="+ id};
-const auto response = request.send("GET");
-       std::string resp = {response.body.begin(), response.body.end()};
+       std::string resp = {httplib::Client ("http://api.anilibria.tv").Get("/v2/getTitle?show_hidden=1&filter=team.voice,type.length,playlist,torrents.list,player.host,player.series,player.playlist&id="+ id)->body};
            while (resp.find("\\\"") != std::string::npos)
        resp.replace(resp.find("\\\""), 2, "cvd");
            while (resp.find("\"alternative\":null") != std::string::npos)
@@ -120,12 +120,24 @@ const auto response = request.send("GET");
            unsigned short i = 1;
            while (i<t2){respt=respt.substr(respt.find("id\"")+4);++i;}
            std::string idt=respt.substr(respt.find("torrent_id")+12);idt=idt.substr(0,idt.find(","));
-           if (addr != "" && qbittorrent != "" && want == -1){std::cout<< "1) torrserver"<<std::endl<<"2) "<<qbittorrent<<std::endl; //"Введите 1 для открытия " << qbittorrent <<", введите 1XX для начала просмотра XX серии с помощью torrserver"<<std::endl;
-               std::string i;std::cin>>i;if(i=="2"){system((qbittorrent + " " + mirror + idt + last + "&").c_str());} else if (i.substr(0,1)=="1") {if (i.substr(0,1)==i) system((mpv + " 'http://" + addr + "/stream?link=" + mirror + idt + last + "&preload&m3u'").c_str()); else system((mpv + " 'http://" + addr + "/stream?link=" + mirror + idt + last + "&preload&m3u'" + " --playlist-start=" + std::to_string((stod(i.substr(1)) - 1))).c_str());}}else
+           if (addr != "" && qbittorrent != "" && want == -1){
+#ifdef unix
+               std::cout<< "1) torrserver"<<std::endl<<"2) "<<qbittorrent<<std::endl; //"Введите 1 для открытия " << qbittorrent <<", введите 1XX для начала просмотра XX серии с помощью torrserver"<<std::endl;
+#endif
+#ifdef _WIN32
+               std::cout << "1) torrserver" << std::endl << "2) torrent" << std::endl;
+#endif
+               std::string i;std::cin>>i;if(i=="2"){system((qbittorrent + " " + mirror + idt + last + "&").c_str());} else if (i.substr(0,1)=="1") {if (i.substr(0,1)==i) system((mpv + " \"http://" + addr + "/stream?link=" + mirror + idt + last + "&preload&m3u\"").c_str()); else system((mpv + " \"http://" + addr + "/stream?link=" + mirror + idt + last + "&preload&m3u\"" + " --playlist-start=" + std::to_string((stod(i.substr(1)) - 1))).c_str());}}else
            if (qbittorrent == "" || want != -1){if (mpv == "mplayer"){mpv="mplayer -playlist";if(addr.length()<30)mpv= "mplayer -prefer-ipv4 -playlist";}
-           if (mpv == "mpv --write-filename-in-watch-later-config --watch-later-directory=~/config/cvd/mpv_watch_later" && want != -1){mpv = mpv + " --playlist-start="+std::to_string(want);}
-               system((mpv +" 'http://" + addr + "/stream?link=" + mirror + idt  +last + "&preload&m3u'").c_str());}
-           else if (addr == "")system((qbittorrent + " " + mirror + idt +last + "&").c_str());}}
+#ifdef unix
+               if (mpv == "mpv --write-filename-in-watch-later-config --watch-later-directory=~/config/cvd/mpv_watch_later" && want != -1)
+#endif
+#ifdef _WIN32
+                   if (mpv == "mpv --write-filename-in-watch-later-config --watch-later-directory=" + std::string(getenv("APPDATA")) + "/cvd/mpv_watch_later" && want != -1)
+#endif
+           mpv = mpv + " --playlist-start="+std::to_string(want);
+               system((mpv +" \"http://" + addr + "/stream?link=" + mirror + idt + last + "&preload&m3u\"").c_str());}
+           else if (addr == "")system((qbittorrent + " " + mirror + idt + last + "&").c_str());}}
 bool is_number(const std::string& s)
 {
     return !s.empty() && std::find_if(s.begin(),
@@ -133,8 +145,13 @@ bool is_number(const std::string& s)
 }
 int main(int args,char** arg)
 {
+#ifdef _WIN32
+system("chcp 65001 > NUL");
+#endif
+#ifdef unix
 struct passwd *pw = getpwuid(getuid());
 const char *homedir = pw->pw_dir;
+#endif
 //     string line;
 //       std::ifstream myfile ("/tmp/1");
 //   if (myfile.is_open())
@@ -152,13 +169,20 @@ const char *homedir = pw->pw_dir;
        std::string dark;
        std::string mpv;
     // std::ifstream is RAII, i.e. no need to call close https://stackoverflow.com/questions/6892754/creating-a-simple-configuration-file-and-parser-in-c
-    std::ifstream cFile(homedir + std::string("/.config/cvd/cvd.conf"));
-    if (cFile.is_open())
+    #ifdef unix
+	std::ifstream cFile(homedir + std::string("/.config/cvd/cvd.conf"));
+#endif
+#ifdef _WIN32
+ std::ifstream cFile(getenv("APPDATA") + std::string("/cvd/cvd.conf"));
+#endif
+if (cFile.is_open())
     {
         std::string line;
         while (getline(cFile, line))
         {
-            line.erase(std::remove_if(line.begin(), line.end(), ::isspace),line.end());
+#ifdef unix
+            line.erase(std::remove_if(line.begin(), line.end(), ::isspace),line.end()); //Program Files
+#endif
             if (line[0] == '#' || line.empty()) continue;
 
             auto delimiterPos = line.find("=");
@@ -167,13 +191,20 @@ const char *homedir = pw->pw_dir;
 
             //Custom coding
             if (name == "limit") limit = value;
-            else if (name == "player") if (value == "mpv")mpv = "mpv --write-filename-in-watch-later-config --watch-later-directory=~/config/cvd/mpv_watch_later"; else mpv = value;
+            else if (name == "player") if (value == "mpv")
+                #ifdef unix
+                mpv = "mpv --write-filename-in-watch-later-config --watch-later-directory=~/config/cvd/mpv_watch_later"
+#endif
+#ifdef _WIN32
+                mpv = "mpv --write-filename-in-watch-later-config --watch-later-directory=" + std::string(getenv("APPDATA")) + "/cvd/mpv_watch_later"
+#endif
+                ;else mpv = value;
             else if (name == "darklike") dark = value;
             else if (name == "libriamirror") darklibria = value;
             else if (name == "torrserver") addr = value;
             else if (name == "torrent") qbittorrent = value;
             else if (name == "confverA") {if (stod(value) < 0){std::cout << "Конфиг устарел! Продолжать работу невозможно." << std::endl;return 1;}}
-            else if (name == "confverB") {if (stod(value) < 0){std::cout << "Конфиг устарел! Новые функции недоступны." << std::endl;}}
+            else if (name == "confverB") {if (stod(value) < 1){std::cout << "Конфиг устарел! Новые функции недоступны." << std::endl;}}
             else if (name == "confverC") {if (stod(value) > 0){std::cout << "Версия программы устарела! Замените текущий конфиг на подходящий для этой версии или обновите программу. Продолжать работу невозможно." << std::endl; return 1;}}
         }
     }
@@ -181,23 +212,19 @@ const char *homedir = pw->pw_dir;
 std::string in,req;
     if(IsPathExist("/data/data/com.termux")){std::cout << "you're in termux. This is experemntal. The program WILL NOT fully work." << std::endl << "Continue?(y/n)";std::cin >> in; if(in == "n"){std::cout << "'No' detected, exiting.." << std::endl;return 0;}else{
 system("/data/data/com.termux/files/usr/bin/termux-api-start >/dev/null&");}}
-    std::cout << "AniLibria search." << std::endl;
     if (args > 1)for(int i=0; i < strlen(arg[1]); i++)
                 in=in+arg[1][i];else std::cin >> in;
     if (args > 2)limit=arg[2];
 if (is_number(in)){if (stod(in) > 380 && stod(in) < 10000)AniLibriaById(in,qbittorrent,addr,darklibria,dark,mpv);}else
     try
 {
-if (in == "showlast")req="http://api.anilibria.tv/v2/getChanges?filter=names,id&show_hidden=1&limit=" + limit; else
-req="http://api.anilibria.tv/v2/searchTitles?filter=names,id&show_hidden=1&limit=" + limit + "&search=" + url_encode(in);
-http::Request request{req};
-const auto response = request.send("GET");
- std::cout << "got ?" << std::endl;
-        std::string resp = {response.body.begin(), response.body.end()};
+if (in == "showlast")req="/v2/getChanges?filter=names,id&show_hidden=1&limit=" + limit; else
+req="/v2/searchTitles?filter=names,id&show_hidden=1&limit=" + limit + "&search=" + url_encode(in);
+std::string resp = {httplib::Client ("http://api.anilibria.tv").Get(req)->body};
             while (resp.find("\\\"") != std::string::npos)
         resp.replace(resp.find("\\\""), 2, "cvd");
             while (resp.find("\"alternative\":null") != std::string::npos)
-	      resp.replace(resp.find("\"alternative\":null"), 18, "\"alternative\":\"null\"");
+          resp.replace(resp.find("\"alternative\":null"), 18, "\"alternative\":\"null\"");
         unsigned short all = CountOccurrences((char*)resp.c_str(), (char*)"\"id\"");
         if (all > 1) {
     for (unsigned short i = 1; i != all+1; i++){std::cout << i << ") ";
