@@ -1,8 +1,30 @@
 cmake_minimum_required(VERSION 3.5)
 
 project(cvd++ LANGUAGES CXX)
+if (UNIX)
+find_package(PkgConfig REQUIRED)
+pkg_search_module(OPENSSL REQUIRED openssl)
 
+if(NOT OPENSSL_FOUND)
+    # Error; with REQUIRED, pkg_search_module() will throw an error by it's own
+endif()
+endif (UNIX)
 add_executable(cvd++ main.cpp)
-target_link_libraries(cvd++)
+if (WIN32)
+set (OPENSSL_VERSION notfound)
+include(FindOpenSSL)
+if (${OPENSSL_VERSION} STREQUAL notfound)
+message(SEND_ERROR "Openssl is requested. If you have installed INCLUDE openssl files edit CmakeLists.txt
+You can install openssl from choco
+https://community.chocolatey.org/packages/openssl")
+endif ()
+target_link_libraries(cvd++ wsock32 ws2_32 crypt32)
+GET_FILENAME_COMPONENT(openssl "[HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\OpenSSL (64-bit)_is1;InstallLocation]" ABSOLUTE CACHE)
+set(OPENSSL_INCLUDE_DIRS "${openssl}/include")
+else()
+message(STATUS "Using OpenSSL ${OPENSSL_VERSION}")
+endif(WIN32)
+include_directories(${OPENSSL_INCLUDE_DIRS})
+target_link_libraries(cvd++ ${OPENSSL_LIBRARIES})
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)

@@ -8,10 +8,11 @@ limit=50 — ліміт тайтлів за один пошук
 player=C:\ProgramData\chocolatey\lib\mpv.install\tools\mpv.exe — шлях до плеєра
 torrent="C:\Program Files\qBittorrent\qbittorrent.exe" — шлях до торент-клієнта
 iregretnothing=1 — шукати приховані релізи
+monsterres=2 — якість відео плеєру "МОНСТР", 0 - 360p, 1 - 720p, 2 - 1080p
 confverA=0
 confverB=1
 confverC=0
 ```
 за відсутністю, наприклад, torrserver чи будь якого іншого компонента його слід не записувати у файл конфігурації.
 
-Задля компіляції програми необхідно мати [cpp-httplib]: https://github.com/yhirose/cpp-httplib/raw/master/httplib.h
+Задля компіляції програми необхідно мати [cpp-httplib](https://raw.githubusercontent.com/yhirose/cpp-httplib/master/httplib.h)
