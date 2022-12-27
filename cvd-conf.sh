@@ -38,11 +38,13 @@ if [ "$torrent" -le "$all" ] && [ "$torrent" -gt 0 ]; then torrent=$(grep Exec /
 ' -f$torrent)| cut -d'
 ' -f1 | cut -c9-)
 fi 2>/dev/null;fi
-echo 'Выполнять поиск по скрытым источникам? (ИСЛЮЧИТЕЛЬНО ДЛЯ ОЗНАКОМЛЕНИЯ, ЗАПРЕЩЕНО КОММЕРЧЕСКОЕ ИСПОЛЬЗОВАНИЕ'
+echo 'Выполнять поиск по скрытым источникам? (ИСЛЮЧИТЕЛЬНО ДЛЯ ОЗНАКОМЛЕНИЯ, ЗАПРЕЩЕНО КОММЕРЧЕСКОЕ ИСПОЛЬЗОВАНИЕ)'
 printf \(нет\)\:
 until [ "$iregretnothing" = 0 ] || [ "$iregretnothing" = 1 ]; do read iregretnothing
 if [[ ${iregretnothing,,} = *y* ]] || [[ ${iregretnothing,,} = *д* ]] || [[ ${iregretnothing,,} = *т* ]]; then iregretnothing=1;
 elif [[ ${iregretnothing,,} = *n* ]] || [[ ${iregretnothing,,} = *н* ]] || [[ "$iregretnothing" = '' ]]; then iregretnothing=0;fi;done
+echo Введите желаемое качество плеера "МОНСТР": 0 - 360p, 1 - 720p, 2 - 1080p
+read monsterres
 darklink=$(curl 2>/dev/null https://darklibria.it/search?find=senko | grep register_click | grep btn | sed s/.*href=\"//g | cut -d\" -f1 | sed s/'release\/sewayaki-kitsune-no-senko-san'/'upload\/torrents\/'/g)
 mkdir -p ~/.config/cvd
 if [ $(echo "$(curl -w %{time_total} -o /dev/null -s https://anilibria.tv/public/torrent) > $(curl -w %{time_total} -o /dev/null -s $darklink)" | bc) -eq 1 ]; then
@@ -53,7 +55,8 @@ echo "limit=$limit
 player=$player
 torrent=$torrent
 iregretnothing=$iregretnothing
+monsterres=$monsterres
 #do not edit below
 confverA=0
-confverB=1
+confverB=2
 confverC=0" >> ~/.config/cvd/cvd.conf
