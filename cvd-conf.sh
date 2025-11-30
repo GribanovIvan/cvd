@@ -124,13 +124,9 @@ while IFS= read -r -s -n1 char; do
   fi
 done;fi
 data=$(curl https://anitube.in.ua --data-raw "login=submit&login_name=$login&login_password=$password" -D - -o /dev/null > /tmp/cvd-gen 2>/dev/null; grep user_id /tmp/cvd-gen | cut -d' ' -f2 > /tmp/1; grep password /tmp/cvd-gen | cut -d' ' -f2 >> /tmp/1; paste -sd "" /tmp/1 | rev | cut -c2- | rev)
-darklink=$(curl 2>/dev/null https://darklibria.it/search?find=senko | grep register_click | grep btn | sed s/.*href=\"//g | cut -d\" -f1 | sed s/'release\/sewayaki-kitsune-no-senko-san'/'upload\/torrents\/'/g)
 mkdir -p ~/.config/cvd
-if [ $(echo "$(curl -w %{time_total} -o /dev/null -s https://anilibria.tv/public/torrent) > $(curl -w %{time_total} -o /dev/null -s $darklink)" | bc) -eq 1 ]; then
-echo libriamirror=https://anilibria.tv/public/torrent/download.php?id= > ~/.config/cvd/cvd.conf;else echo "darklike=.torrent
-libriamirror=$darklink" > ~/.config/cvd/cvd.conf;fi
-if [[ $torrserver != *none ]]; then echo torrserver=$torrserver >> ~/.config/cvd/cvd.conf;fi
-echo "limit=$limit
+if [[ $torrserver != *none ]]; then echo torrserver=$torrserver > ~/.config/cvd/cvd.conf;fi
+echo "libriamirror=https://anilibria.tv/public/torrent/download.php?id=
 player=$player
 torrent=$torrent
 iregretnothing=$iregretnothing

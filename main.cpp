@@ -6,9 +6,9 @@
 #include <filesystem>
 #include <cstdlib>
 #include <fstream>
-//#include <future>
-// But the cat murmur
+// Ressurection
 
+static httplib::Client anitubehttps("https://anitube.in.ua");
 
 bool IsPathExist(const std::string &s) {
   struct stat buffer;
@@ -415,16 +415,17 @@ std::string udrop(std::string original) {
 std::string realpeer(std::string original, unsigned short res) {
     std::string host=preuniversal(original);
     std::string resp = {httplib::Client (host).Get("/api/v1/videos"+original.substr(host.length()+13))->body};
-    resp = resp.substr(resp.find("resolution")+18);
-    while (stod(resp) > res) {
-        short pos = resp.find("resolution");
-        if (pos != -1) {
-            resp = resp.substr(pos+18);
-        } else {
-            break;
-        }
-    }
-    resp = resp.substr(resp.find("fileDownloadUrl")+18);return resp.substr(0,resp.find(",")-1);
+    // resp = resp.substr(resp.find("resolution")+18);
+    // while (stod(resp) > res) {
+    //     short pos = resp.find("resolution");
+    //     if (pos != -1) {
+    //         resp = resp.substr(pos+18);
+    //     } else {
+    //         break;
+    //     }
+    // }
+																//fileDownloadUrl 18
+    resp = resp.substr(resp.find("playlistUrl")+14);return resp.substr(0,resp.find(",")-1);
 }
 
 std::string gg(std::string original) {
@@ -643,7 +644,9 @@ unsigned short playerajaxD(std::string who,std::vector<std::string> &links) {
 void simplevoiced(std::string resp,bool nl,std::string sounded) {
     std::string voiced;
     if (resp.find("h/v") == std::string::npos) {
-      voiced = resp.substr(resp.find("https://anitube.in.ua/xfsearch/translation/"));
+			size_t pos = resp.find("https://anitube.in.ua/xfsearch/translation/");
+			if(pos == std::string::npos)return;
+      voiced = resp.substr(pos);
       sounded="Переклад";
     } else {
     voiced = resp.substr(resp.find("https://anitube.in.ua/xfsearch/voiced/"));
@@ -720,8 +723,7 @@ std::string skachali,std::string sec,std::string sounded,std::string testfunc,st
         nt = "No torrents was found";
     }
 #endif
-    httplib::Client server ("https://anitube.in.ua");
-        std::string resp {server.Get(in.substr(in.find("anitube.in.ua")+13), headers)->body};
+        std::string resp {anitubehttps.Get(in.substr(in.find("anitube.in.ua")+13), headers)->body};
         //resp = resp.substr(resp.find("]")+8);resp = resp.substr(0,resp.find(",\"")-1);
     unescape(resp);
     std::string orig;
@@ -816,7 +818,7 @@ std::string skachali,std::string sec,std::string sounded,std::string testfunc,st
         lastv=last;
         normal=1;
     } else if (resp.find("playlists-ajax") != std::string::npos) {
-        vids = server.Get("/engine/ajax/playlists.php?news_id="+std::to_string(stoi(in.substr(22)))+"&xfield=playlist&user_hash="+resp.substr(resp.find("h = '")+5,40),headers)->body;
+        vids = anitubehttps.Get("/engine/ajax/playlists.php?news_id="+std::to_string(stoi(in.substr(22)))+"&xfield=playlist&user_hash="+resp.substr(resp.find("h = '")+5,40),headers)->body;
         while (vids.find("amp;") != std::string::npos) {
             vids.erase(vids.find("amp;"), 4);
         }
@@ -839,7 +841,10 @@ std::string skachali,std::string sec,std::string sounded,std::string testfunc,st
     httplib::Headers blank;
     if ((headers != blank) && (qbittorrent.size()+torrserver.size() != 0)) {
         links.resize(lastv+1);
-        if (resp.find("t_title\"") != std::string::npos) { // перевірка на факт наявності торентів
+				size_t followto=resp.find("ПЕРЕЙТИ НА СТОРІНКУ ЗАВАНТАЖЕННЯ");
+        if (followto != std::string::npos) { // перевірка наявності торентів
+						char total=stoi(resp.substr(resp.find("ДОСТУПНО",followto)+17,2));
+						resp=anitubehttps.Get(in.substr(0,in.length()-5)+"/torrent.html",headers)->body;
             serstr = serstr.substr(0,serstr.find("<h"));
             std::string hv;
             unsigned short dur = 0;
@@ -895,11 +900,7 @@ std::string skachali,std::string sec,std::string sounded,std::string testfunc,st
                 temp = resp.substr(resp.find("<span>")+6);
                 ++last;
                 unsigned short sers=1;
-                try {
-                    sers=stod(temp.substr(temp.find("<td>")+4));
-                } catch(...){
-
-                }
+                sers=stod(temp.substr(temp.find("<td>")+4));
 #ifdef _WIN32
                 std::cout << last << ") " << name << ", \033[32m" << stod(temp) << "\033[1;37m/\033[0;31m" << stod(temp.substr(temp.find("<span>")+6)) << "\033[0m, " << stod(temp.substr(temp.find("жено: ")+10)) << " ";
                 std::wcout << skachali;
@@ -1014,7 +1015,7 @@ std::string skachali,std::string sec,std::string sounded,std::string testfunc,st
    system((mpv + " '" + std::filesystem::temp_directory_path().string()+"/cvd.m3u' " + mpvargs).c_str());
     //}
     }}}
-std::string get_dle(httplib::Headers headers){std::string resp = {httplib::Client ("https://anitube.in.ua").Get("/", headers)->body};return resp.substr(resp.find("dle_login_hash")+18,40);}
+std::string get_dle(httplib::Headers headers){std::string resp = {anitubehttps.Get("/", headers)->body};return resp.substr(resp.find("dle_login_hash")+18,40);}
 void anilibria(std::string req,std::string in,std::string qbittorrent,std::string addr,std::string darklibria,std::string dark,std::string mpv,std::string show_hidden,std::string lc,bool warn,
                #ifdef _WIN32
                std::wstring sounded,std::wstring sec,std::wstring skachali,std::wstring net,std::wsrting serii
@@ -1086,36 +1087,18 @@ void anilibria(std::string req,std::string in,std::string qbittorrent,std::strin
     }
 }
 
-unsigned short anitubesearch(std::vector<std::string> &links, unsigned short i, unsigned short all,std::string req, std::string &toecho) {
-    std::string in;
-    while (i != all) {
-        req=req.substr(req.find("href")+6);
-        if (req.substr(1,1) == "\\") {
-            return stod(req.substr(req.find(" (")+2));
-            return 0;
-        } else {
-            //links.push_back(req.substr(req.find("a\\/")+3,req.find("\\\">")-req.find("a\\/")-3));
-            links.push_back(req.substr(26,req.find("\\\">")-26));
-            in=req.substr(req.find(">",req.find(">")+1)+6);
-            in=in.substr(0,in.find(")")+1);in=un(in,"\\/");in=un(in,"  ");
-            ++i;
-            toecho = toecho + std::to_string(i) + ")" + in  + " " + getsers(req) + "\n";
-        }
-    }
-    return 0;
-}
-
 std::string anitubesite(std::string aniresp, std::vector<std::string> &links, short limit,
 #ifdef WIN32
 std::wstring
 #else
                  std::string
 #endif
-                 sounded) {
+                 sounded,bool expand=1) {
     unsigned short i =0;
-    while (i<11 && i<limit) {
+		unsigned short nextpage=2;
+    while (true) {
         ++i;
-        aniresp=aniresp.substr(aniresp.find("story_c\"")+39);
+        aniresp=aniresp.substr(aniresp.find("story_c\"")+52);
         links.push_back(aniresp.substr(0,aniresp.find("\"")));
         std::string temp = aniresp.substr(aniresp.find("l\">")+3);
         std::string name = temp.substr(0,temp.find("<"));
@@ -1138,14 +1121,21 @@ std::wstring
             std::cout << 3;
         }
         std::cout << "m" << type << " \e[90m" << date << datelast;
-        if (dateultralast != "Перегляд") {
+        if (dateultralast != "${dateLabel}") { //check it
             std::cout << " " << dateultralast; std::cout <<"\e[0m " << getsers(aniresp.substr(0,aniresp.find("_ra")));
             simplevoiced(aniresp.substr(0,aniresp.find("_ra")),0,sounded);
             std::cout << std::endl;
         }
+				if(!expand&&i==limit)break;
+				if(!(i%11)){
+						if (i>=limit)break;
+						if(expand){
+						anitubehttps.set_follow_location(true);
+						aniresp=anitubehttps.Get("/anime/page/"+std::to_string(nextpage++))->body;
+						}
+					}
     }
-    std::cin >> i;
-    return links[i-1];
+    std::cin >> i;return links[i-1];
     //std::cout << aniresp.substr(0,aniresp.find("v class=\"n")-66);
 }
 
@@ -1266,7 +1256,6 @@ int main(int args,char **arg) {
             auto name = line.substr(0, delimiterPos);
             auto value = line.substr(delimiterPos + 1);
 
-            //Custom coding
             if (name == "limit") {
                 limit = value;
             } else if (name == "player") {
@@ -1293,7 +1282,11 @@ int main(int args,char **arg) {
             } else if (name == "res") {
                 res = stod(value)/360;
             } else if (name == "anitube.in.ua") {
-                headers = {{"Cookie", value}};
+                headers = {
+                  {"Cookie", value},
+                  {"X-Requested-With", "XMLHttpRequest"},
+                  {"Referer", "//anitube.in.ua"}
+                };
             } else if (name == "warn") {
                 warn = stod(value);
             } else if (name == "over") {
@@ -1364,6 +1357,7 @@ int main(int args,char **arg) {
     if (args > 2) {
         limit=arg[2];
     }
+		anitubehttps.set_follow_location(true);
     if (is_number(in)) {
         if (stod(in) > 380 && stod(in) < 10000) {
             AniLibriaById(in,qbittorrent,addr,darklibria,dark,mpv,show_hidden,lc,sounded,sec,skachali,serii,warn);
@@ -1403,15 +1397,11 @@ int main(int args,char **arg) {
             req="/v2/searchTitles?filter=names,id,season.year&show_hidden=" + show_hidden + "&limit=" + limit + "&search=" + url_encode(in);
         }
         if (norusso) {
-            httplib::Client tub("https://anitube.in.ua");
-            tub.set_follow_location(true);
             std::string aniresp;
             std::vector<std::string> links;
-            unsigned short i=0;
-            if (in == "showlast") {
-                anitube(anitubesite(tub.Get(req)->body,links,stod(limit),sounded),mpv,lc,res,headers,addr,qbittorrent,over,0,skachali,sec,sounded,testfunc,serii);
-            } else {
-                req = tub.Post("/engine/lazydev/dle_search/ajax.php",headers,"story="+req+"&dle_hash="+get_dle(headers), "application/x-www-form-urlencoded")->body;
+            if (in == "showlast") anitube(anitubesite(anitubehttps.Get(req)->body,links,stoi(limit),sounded,autoexpand),mpv,lc,res,headers,addr,qbittorrent,over,0,skachali,sec,sounded,testfunc,serii);
+            else {
+                req = anitubehttps.Post("/engine/lazydev/dle_search/ajax.php",headers,"story="+req+"&dle_hash="+get_dle(headers), "application/x-www-form-urlencoded")->body;
                 req=req.substr(0,req.find("style>"));
                 unsigned char all=CountOccurrences((char*)req.c_str(),(char*)"href");
                 if (all == 1) {
@@ -1419,32 +1409,40 @@ int main(int args,char **arg) {
                 } else {
                     std::string toecho;
                     if (!forceexpand) {
-                        all = anitubesearch(links,i,all,req,toecho);
+												unsigned short i=0;
+												std::string in;
+												while (i != all) {
+														req=req.substr(req.find("href")+6);
+														if (req.substr(1,1) == "\\") {
+																all=stod(req.substr(req.find(" (")+2));
+																if (!autoexpand)std::cout << toecho << "\e[5m\e[93m" << found << "\e[0m" << all << std::endl;
+																break;
+														} else {
+																//links.push_back(req.substr(req.find("a\\/")+3,req.find("\\\">")-req.find("a\\/")-3));
+																links.push_back(req.substr(26,req.find("\\\">")-26));
+																in=req.substr(req.find(">",req.find(">")+1)+6);
+																in=in.substr(0,in.find(")")+1);in=un(in,"\\/");in=un(in,"  ");
+																++i;
+																toecho = toecho + std::to_string(i) + ")" + in  + " " + getsers(req) + "\n";
+														}
+												}
                     }
-                    if (all != 0) {
-                        if (!autoexpand) {
-                            std::cout << toecho << "\e[5m\e[93m" << found << "\e[0m" << all << std::endl;
-                            std::cin >> toecho;
-                        }
-                    } else {
-                        std::cout << toecho;
-                    }
+										std::cout << toecho;
+										std::cin >> toecho;
                     if (is_number(toecho) && stoi(toecho) < 6) {
-                        anitube("https://anitube.in.ua/"+links[i-1],mpv,lc,res,headers,addr,qbittorrent,over,0,skachali,sec,sounded,testfunc,serii);
+                        anitube("https://anitube.in.ua/"+links[stoi(toecho)-1],mpv,lc,res,headers,addr,qbittorrent,over,0,skachali,sec,sounded,testfunc,serii);
                     } else {
-                        aniresp = tub.Post("/","do=search&story="+in,"application/x-www-form-urlencoded")->body;
+                        aniresp = anitubehttps.Post("/","do=search&story="+in,"application/x-www-form-urlencoded")->body;
                         all=CountOccurrences((char*)aniresp.c_str(),(char*)"story_c\"");
-                        if (all > stoi(limit)) {
-                            all=stoi(limit);
-                        }
-                        anitube("https://anitube.in.ua/"+anitubesite(aniresp,links,all,sounded),mpv,lc,res,headers,addr,qbittorrent,over,0,skachali,sec,sounded,testfunc,serii);
+                        // if (all > stoi(limit)) {
+                        //     all=stoi(limit);
+                        // }
+                        anitube("https://anitube.in.ua/"+anitubesite(aniresp,links,all,sounded,autoexpand),mpv,lc,res,headers,addr,qbittorrent,over,0,skachali,sec,sounded,testfunc,serii);
                     }
 //                  curl https://anitube.in.ua --data-raw 'do=search&story=naruto'
                 }
             }
-        } else {
-            anilibria(req,in,qbittorrent,addr,darklibria,dark,mpv,show_hidden,lc,warn,sounded,sec,skachali,net,serii);
-        }
+        } else anilibria(req,in,qbittorrent,addr,darklibria,dark,mpv,show_hidden,lc,warn,sounded,sec,skachali,net,serii);
     }
     return 0;
 }
